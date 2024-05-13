@@ -1,7 +1,4 @@
-
-# Farmer.chat documentation
-
-## Introduction
+## Introduction to Farmer.chat - AI powered agricultural assistant
 Farmer chat is a multi-modal, multi-language QnA bot intended to assist farmers, extension workers, and agronomists. Powered by cutting-edge technologies like Large Language Models (LLMs), Generative AI and RAG (Retrieval Augmented Generation), Farmer.Chat is your go-to source for agricultural advice, tips, and news. As part of the Digital Green tech stack, Farmer.Chat relies on Farmstack to retrieve the content required for answering user queries. 
 
 ## Functionality / Features
@@ -43,8 +40,8 @@ Farmer chat is a multi-modal, multi-language QnA bot intended to assist farmers,
 
 # Steps
 
-Clone the [repo](https://github.com/digitalgreenorg/agri.chat/tree/opensource-project) into an empty directory in IDE
-`git clone https://github.com/digitalgreenorg/agri.chat`
+Clone the [repo](https://github.com/digitalgreenorg/monorepo/edit/main/farmer-chat) into an empty directory in IDE
+`git clone https://github.com/digitalgreenorg/monorepo/edit/main/farmer-chat`
 
 **Setting up the env file and .config.env file**:
 1. Place the .env and .config.env file directly in the project root directory <<Link to templates>>
