@@ -1,0 +1,32 @@
+ .video-responsive {
+     /* overflow: hidden; */
+     /* padding-bottom: 56.25%; */
+     /* max-width: 1100px; */
+     /* 16:9 aspect ratio */
+     /* position: relative; */
+     /* height: 0; */
+     /* margin: 35px 35px 35px 20px; */
+ }
+
+ .video-responsive iframe {
+     /* left: 0;
+    top: 0; */
+     /* height: 100%; */
+     /* width: 100%; */
+     /* position: absolute; */
+ }
+
+ .video-responsive {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     /* Additional styles for responsiveness */
+     max-width: 367px;
+     /* Set a maximum width for the container if needed */
+ }
+
+ .video-responsive iframe {
+     /* Remove position:absolute from the iframe */
+     width: 220px;
+     height: 130px;
+ }

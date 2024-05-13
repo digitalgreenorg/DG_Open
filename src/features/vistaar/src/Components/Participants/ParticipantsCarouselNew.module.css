@@ -1,0 +1,25 @@
+.slides {
+  position: relative;
+}
+
+.slides .slick-prev,
+.slick-next {
+  position: absolute;
+  top: 50%;
+}
+
+.slides .slick-prev {
+  left: 5%;
+}
+
+.slides .slick-next {
+  right: 5%;
+}
+
+.count_text {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 22px;
+  color: #000000;
+  width: 100%;
+}
