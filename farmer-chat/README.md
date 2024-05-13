@@ -1,7 +1,7 @@
 ## Introduction to Farmer.chat - AI powered agricultural assistant
 Farmer chat is a multi-modal, multi-language QnA bot intended to assist farmers, extension workers, and agronomists. Powered by cutting-edge technologies like Large Language Models (LLMs), Generative AI and RAG (Retrieval Augmented Generation), Farmer.Chat is your go-to source for agricultural advice, tips, and news. As part of the Digital Green tech stack, Farmer.Chat relies on Farmstack to retrieve the content required for answering user queries. 
 
-## Functionality / Features
+## Features
  - **Multi-Lingual Support**: Leveraging the power of Google Translate, Farmer.Chat can converse and provide information in multiple languages in both text and audio, allowing it to cater to users from diverse linguistic backgrounds.
  - **Vectorized Document Retrieval**: Retrieves the content required for answering the queries from Farmstack, a multi-tenant content and dataset exchange platform developed by [Digital Green](https://www.digitalgreen.org). Farmstack vectorises text from extensive agricultural PDF & Rich text documents, videos, websites etc. and retrieve relevant information based on vector similarity
  - **AI-Powered Chat**: Backed by RAG (Retrieval Augmented Generation) with a state-of-the-art AI pipeline comprising of below phases to answer user queries.
