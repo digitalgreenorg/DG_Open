@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+
+  usm:
+    image: farmstack/steward-user-management:${FS_USM_VERSION}
+    container_name: fs-usm
+    env_file:
+      - ./.env
+    depends_on:
+      - "mysql"
+    volumes:
+      - ./config/default.json:/usr/src/app/config/default.json
+    ports:
+      - "6022:6022"
+    networks:
+      - mysql-network
+
+  graphql-api:
+    image: farmstack/steward-graphql:${FS_STEWARD_API_VERSION}
+    container_name: fs-steward-graphql
+    env_file:
+      - ./.env
+    depends_on:
+      - "mysql"
+    ports:
+      - "8002:8002"
+    command: >
+      sh -c "python FS_central_api/manage.py makemigrations && python FS_central_api/manage.py migrate && python FS_central_api/manage.py runserver 0.0.0.0:8002"
+    networks:
+      - mysql-network
+
+networks:
+  mysql-network:
+    driver: bridge

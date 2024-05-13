@@ -1,0 +1,61 @@
+[
+  {
+    "version": "1.0.0",
+    "version_code": 2,
+    "release_date": "2021-02-02T12:09:56Z",
+    "criticality_level": "SECURITY",
+    "docker_images": {
+      "steward_ui": {
+        "registry": "hub.docker.com",
+        "image": "farmstack/steward-ui",
+        "tag": "1.0.0"
+      },
+      "steward_api": {
+        "registry": "hub.docker.com",
+        "image": "farmstack/steward-graphql",
+        "tag": "1.0.0"
+      },
+      "steward_user_management": {
+        "registry": "hub.docker.com",
+        "image": "farmstack/steward-user-management",
+        "tag": "1.0.0"
+      },
+      "participant_ui": {
+        "registry": "hub.docker.com",
+        "image": "farmstack/participant-ui",
+        "tag": "1.0.0"
+      }
+    },
+    "changelog": [
+      "Steward API Release",
+      "Participant Release",
+      "User Management Critical Bug fixes"
+    ]
+  },
+  {
+    "version": "0.0.9",
+    "version_code": 1,
+    "release_date": "2021-01-20T",
+    "criticality_level": "UPDATE",
+    "docker_images": {
+      "steward_ui": {
+        "registry": "hub.docker.com",
+        "image": "farmstack/steward-ui",
+        "tag": "1.0.0"
+      },
+      "steward_api": {
+        "registry": "hub.docker.com",
+        "image": "farmstack/steward-graphql",
+        "tag": "1.0.0"
+      },
+      "steward_user_management": {
+        "registry": "hub.docker.com",
+        "image": "farmstack/steward-user-management",
+        "tag": "1.0.0"
+      }
+    },
+    "changelog": [
+      "Initial Steward Release"
+    ]
+  }
+]

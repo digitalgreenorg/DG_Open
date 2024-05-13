@@ -1,0 +1,11 @@
+.deploy
+venv
+.idea
+__pycache__
+*.conf
+.DS_Store
+*.pyc
+.env
+default.json
+*.key
+*.crt
