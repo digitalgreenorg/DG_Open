@@ -1,0 +1,704 @@
+openapi: 3.0.0
+info:
+  title: Farmer.Chat API Service
+  version: 1.0.0
+  description: >-
+    API endpoints for retrieving answers for farming related queries via text
+    and audio.
+servers:
+  - url: 'https://api.yourdomain.com'
+    description: Production server
+
+paths:
+  /chat/get_answer_for_text_query:
+    post:
+      summary: Get answer for text query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_id:
+                  type: string
+                  description: >-
+                    Valid email address registered on FarmStack Content
+                    Retrieval site.
+                  example: johndoe@example.com
+                query:
+                  type: string
+                  description: >-
+                    Text query (question) related to Farming or agriculture from
+                    the client expecting a relevant answer.
+                  example: How to grow wheat?
+      responses:
+        '200':
+          description: Successful retrieval of response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Successful retrieval of response for above query
+                  query:
+                    type: string
+                    description: Current query or question submitted by the client.
+                    example: How to grow wheat?
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+                  message_id:
+                    type: string
+                    description: >-
+                      Message ID of the current query submitted by the client.
+                      If message_id is available, it is to be submitted with the
+                      specified subsequent API endpoints such as
+                      /chat/synthesise_audio/
+                    example: 10000000-0000-0000-0000-000000000000
+                  response:
+                    type: string
+                    description: >-
+                      Actual response or answer for the query processed by the
+                      the app. This could also contain out of context response
+                      for which the app may not contain the relevant content to
+                      retrieve the answer for.
+                    example: >-
+                      Seems like you're interested in growing wheat effectively,
+                      John! \n\nBased on the information in the context, here 
+                      are some tips for growing wheat effectively\u0003 Avoid 
+                      using fertilizers at certain stages of growth\n-  Provide
+                      adequate water, especially in areas with insufficient
+                      rainfall.
+                  follow_up_questions:
+                    type: array
+                    items:
+                      oneOf:
+                        follow_up_question_id:
+                          type: string
+                          description: ID of the Follow-up question generated.
+                          example: 10000000-1000-0000-0000-000000000000
+                        sequence:
+                          type: int
+                          description: Sequence of the Follow-up question generated.
+                          example: 1
+                        question:
+                          type: string
+                          description: generated question or query.
+                          example: >-
+                            How can I optimize irrigation practices to boost wheat
+                            yields?
+        '401':
+          description: Unauthorized due to invalid email ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Invalid Email ID
+                  query:
+                    type: string
+                    description: Current query or question submitted by the client.
+                    example: How to grow wheat?
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Something went wrong
+                  query:
+                    type: string
+                    description: Current query or question submitted by the client.
+                    example: How to grow wheat?
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: true
+
+  /chat/synthesise_audio:
+    post:
+      summary: Synthesise audio from text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_id:
+                  type: string
+                  description: >-
+                    Valid email address registered on FarmStack Content
+                    Retrieval site.
+                  example: johndoe@example.com
+                text:
+                  type: string
+                  description: >-
+                    Actual response or the answer generated via the previous API
+                    endpoint.
+                  example: >-
+                    Seems like you're interested in growing wheat effectively,
+                    John! \n\nBased on the information in the context, here  are
+                    some tips for growing wheat effectively\u0003 Avoid  using
+                    fertilizers at certain stages of growth\n-  Provide adequate
+                    water, especially in areas with insufficient rainfall.
+                message_id:
+                  type: string
+                  description: Message ID via the previous API endpoint if available.
+                  example: 10000000-0000-0000-0000-000000000000
+      responses:
+        '200':
+          description: Audio synthesis successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Audio synthesis successful
+                  audio:
+                    type: string
+                    description: >-
+                      Plaintext Base64 representation string of the processed or
+                      synthesised audio from the request body of text
+                    example: >-
+                      T2dnUwACAAAAAAAAAAAAAAAAAAAAAENewaEBE09wdXNIZWFkAQE4AcBdAAAAAA
+                      BPZ2dTAAAAAAAAAAAAAAAAAAABAAAASsI48gErT3B1c1RhZ3MbAAAAR29vZ2xl
+                      IFNwZWVjaCB1c2luZyBsaWJvcHVzAAAAAE9nZ1MAAIC7AAAAAAAAAAAAAAIAAA
+                      A5nwpbMn9FXGZfUVE/Pz9ATVFRU1xeWVlTUVBIRERIVVZbWVRWU2dDW2ZDX0RZ
+                      VlFRUVFRRFBP2H ...
+                  text:
+                    type: string
+                    description: Text message received via the request body
+                  example: >-
+                    Seems like you're interested in growing wheat effectively,
+                    John! \n\nBased on the information in the context, here  are
+                    some tips for growing wheat effectively\u0003 Avoid  using
+                    fertilizers at certain stages of growth\n-  Provide adequate
+                    water, especially in areas with insufficient rainfall.
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+        '401':
+          description: Unauthorized due to invalid email ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Invalid Email ID
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Something went wrong
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: true
+
+  /chat/transcribe_audio:
+    post:
+      summary: Transcribe audio to text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_id:
+                  type: string
+                  description: >-
+                    Valid email address registered on FarmStack Content
+                    Retrieval site.
+                  example: johndoe@example.com
+                query:
+                  type: string
+                  description: >-
+                    Plaintext Base64 representation of query (question) related
+                    to Farming or agriculture from the client expecting a
+                    relevant answer.
+                  example: >-
+                    T2dnUwACAAAAAAAAAAAAAAAAAAAAAEsaWJvcHVzAAAAAE9nZ1MAAEC/
+                    AAAAAAAAAAAAAAIAAADrAzOsM31hP2BkTVdTU ...
+                query_language_bcp_code:
+                  type: string
+                  default: en-US
+                  description: >-
+                    Relevant human (spoken) language BCP47 code of the query
+                    (Base64 representation query).
+                  example: es-US
+      responses:
+        '200':
+          description: Transcriptions generated successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Successful transcription for above input voice query.
+                  heard_input_query:
+                    type: string
+                    description: >-
+                      Synthesised or decoded audio into text from the base64
+                      representation query received via request body.
+                    example: How to grow wheat?
+                  heard_input_audio:
+                    type: string
+                    description: >-
+                      Plaintext Base64 representation query (question) received
+                      via the request body.
+                    example: >-
+                      T2dnUwACAAAAAAAAAAAAAAAAAAAAAEsaWJvcHVzAAAAAE9nZ1MAAEC/
+                      AAAAAAAAAAAAAAIAAADrAzOsM31hP2BkTVdTU ...
+                  confidence_score:
+                    type: number
+                    description: >-
+                      Confidence score of the detected audio in a specific or a
+                      given language. Synthesised the audio into text only if
+                      the score is above 0.7
+                    example: 0.99
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+                  message_id:
+                    type: string
+                    description: Message ID via the previous API endpoint if available.
+                    example: 20000000-0000-0000-0000-000000000000
+        '400':
+          description: Bad request due to invalid file or base64 string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: >-
+                      Unfortunately unable to transcribe the above voice input
+                      query.
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+                  message_id:
+                    type: string
+                    example: 20000000-0000-0000-0000-000000000000
+        '401':
+          description: Unauthorized due to invalid email ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Invalid Email ID
+                  error:
+                    type: boolean
+                    example: false
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Something went wrong
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: true
+
+  /chat/get_answer_by_voice_query:
+    post:
+      summary: Get answer by processing voice query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_id:
+                  type: string
+                  description: >-
+                    Valid email address registered on FarmStack Content
+                    Retrieval site.
+                  example: johndoe@example.com
+                query:
+                  type: string
+                  description: >-
+                    Plaintext Base64 representation of query (question) related
+                    to Farming or agriculture from the client expecting a
+                    relevant answer.
+                  example: >-
+                    T2dnUwACAAAAAAAAAAAAAAAAAAAAAEsaWJvcHVzAAAAAE9nZ1MAAEC/
+                    AAAAAAAAAAAAAAIAAADrAzOsM31hP2BkTVdTU ...
+                query_language_bcp_code:
+                  type: string
+                  default: en-US
+                  description: >-
+                    Relevant human (spoken) language BCP47 code of the query
+                    (Base64 representation query).
+                  example: es-US
+      responses:
+        '200':
+          description: Voice query processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Successful transcription for above input voice query.
+                  heard_input_query:
+                    type: string
+                    description: >-
+                      Synthesised or decoded audio into text from the base64
+                      representation query received via request body.
+                    example: How to grow wheat?
+                  heard_input_audio:
+                    type: string
+                    description: >-
+                      Plaintext Base64 representation query (question) received
+                      via the request body.
+                    example: >-
+                      T2dnUwACAAAAAAAAAAAAAAAAAAAAAEsaWJvcHVzAAAAAE9nZ1MAAEC/
+                      AAAAAAAAAAAAAAIAAADrAzOsM31hP2BkTVdTU ...
+                  confidence_score:
+                    type: number
+                    description: >-
+                      Confidence score of the detected audio in a specific or a
+                      given language. Synthesised the audio into text only if
+                      the score is above 0.7
+                    example: 0.99
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+                  message_id:
+                    type: string
+                    description: Message ID via the previous API endpoint if available.
+                    example: 20000000-0000-0000-0000-000000000000
+                  response:
+                    type: string
+                    description: >-
+                      Actual response or answer for the query processed by the
+                      the app. This could also contain out of context response
+                      for which the app may not contain the relevant content to
+                      retrieve the answer for.
+                    example: >-
+                      Seems like you're interested in growing wheat effectively,
+                      John! \n\nBased on the information in the context, here 
+                      are some tips for growing wheat effectively\u0003 Avoid 
+                      using fertilizers at certain stages of growth\n-  Provide
+                      adequate water, especially in areas with insufficient
+                      rainfall.
+                  follow_up_questions:
+                    type: array
+                    items:
+                      oneOf:
+                        follow_up_question_id:
+                          type: string
+                          description: ID of the Follow-up question generated.
+                          example: 10000000-1000-0000-0000-000000000000
+                        sequence:
+                          type: int
+                          description: Sequence of the Follow-up question generated.
+                          example: 1
+                        question:
+                          type: string
+                          description: generated question or query.
+                          example: >-
+                            How can I optimize irrigation practices to boost wheat
+                            yields?
+        '400':
+          description: Bad request due to invalid file or base64 string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: >-
+                      Unfortunately unable to transcribe the above voice input
+                      query.
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+                  message_id:
+                    type: string
+                    example: 20000000-0000-0000-0000-000000000000
+        '401':
+          description: Unauthorized due to invalid email ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Invalid Email ID
+                  error:
+                    type: boolean
+                    example: false
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Something went wrong
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: true
+
+  /language/languages:
+    get:
+      summary: list supported languages
+      parameters:
+        - in: query
+          name: email_id
+          schema:
+            type: string
+          required: true
+          description: Valid email address registered on FarmStack Content Retrieval site.
+          example: johndoe@example.com
+      responses:
+        '200':
+          description: Retrieved list of supported languages.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Successful retrieval of supported language list.
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+                  language_data:
+                    type: array
+                    items:
+                      oneOf:
+                        language_id:
+                          type: integer
+                          description: ID of the language
+                          example: 1
+                        language_name:
+                          type: string
+                          description: Name of the language
+                          example: Spanish
+                        language_display_name:
+                          type: string
+                          description: Display name of the language
+                          example: Español (Spanish)
+                        language_code:
+                          type: string
+                          description: Two digit ISO 639-1 language code
+                          example: es
+                        language_latn_code:
+                          type: string
+                          description: >-
+                            Language code of a specific local language written in
+                            Latin script
+                          example: es-Latn
+                        language_bcp_code:
+                          type: string
+                          description: Language code for local accent of a specific language
+                          example: es-ES
+        '401':
+          description: Unauthorized due to invalid email ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Invalid Email ID
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+
+  /language/set_language:
+    post:
+      summary: Save or set the client or user preferred language
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_id:
+                  type: string
+                  description: >-
+                    Valid email address registered on FarmStack Content
+                    Retrieval site.
+                  example: johndoe@example.com
+                language_id:
+                  type: integer
+                  description: >-
+                    Language ID fetched via the previous API endpoint
+                    (/language/languages)
+                  example: 10000000-0000-1000-0000-000000000000
+      responses:
+        '200':
+          description: Successfully saved client or user preferred language
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: >-
+                      Saved the user's (johndoe@example.com) preferred language
+                      with Español (Spanish).
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+        '400':
+          description: Bad request due to invalid file or base64 string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Language with ID 50 does not exist.
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+        '401':
+          description: Unauthorized due to invalid email ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Invalid Email ID
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: false
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Status of the current API request as a text message.
+                    example: Something went wrong
+                  error:
+                    type: boolean
+                    description: >-
+                      Error status if the API request fails other than bad
+                      request.
+                    example: true
+
