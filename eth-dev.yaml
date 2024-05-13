@@ -1,0 +1,32 @@
+---
+  - hosts: eth_dev
+    tasks:
+      - name: "docker-compose down"
+        shell: docker-compose -f test.yaml down
+      
+      - name: Remove image
+        docker_image:
+          state: absent
+          name: farmstack/fs_eth_dev-ui:latest
+          tag: latest
+
+      - name: Remove image
+        docker_image:
+          state: absent
+          name: farmstack/fs_eth_dev-be:latest
+          tag: latest
+
+      - name: pull datahub-ui-dev image
+        docker_image:
+          name: farmstack/fs_eth_dev-ui:latest
+          tag: latest
+          source: pull
+      
+      - name: pull datahub-be-dev image
+        docker_image:
+          name: farmstack/fs_eth_dev-be:latest
+          tag: latest
+          source: pull
+
+      - name: "docker-compose up"
+        shell: docker-compose -f test.yaml up -d

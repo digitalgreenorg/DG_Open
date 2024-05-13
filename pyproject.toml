@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "datahub-api"
+version = "0.1.0"
+description = "API for datahub"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Django = "^4.0.5"
+djangorestframework = "^3.13.1"
+djangorestframework-simplejwt = "^5.2.0"
+pyotp = "^2.6.0"
+django-extensions = "^3.1.5"
+django-rest-framework-braces = "^0.3.4"
+sendgrid = "^6.9.7"
+python-http-client = "^3.3.7"
+starkbank-ecdsa = "^2.0.3"
+django-environ = "^0.8.1"
+pyaml = "^21.10.1"
+Pillow = "^9.1.1"
+pytest = "^7.1.2"
+django-nose = "^1.4.7"
+django-filter = "^22.1"
+
+[tool.poetry.dev-dependencies]
+black = "^22.3.0"
+pylint = "^2.14.0"
+pytest = "^7.1.2"
+drf-spectacular = "^0.22.1"
+drf-spectacular-sidecar = "^2022.6.1"
+drf-yasg = "^1.20.0"
+django-debug-toolbar = "^3.4.0"
+django-cors-headers = "^3.13.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

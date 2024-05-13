@@ -1,0 +1,6 @@
+{
+    "provider_core": 20000,
+    "consumer_core": 25000,
+    "consumer_app": 9000,
+    "provider_app": 8000
+}
