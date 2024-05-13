@@ -1,0 +1,43 @@
+{
+  "version": "3",
+  "services": {
+    "consumer-core": {
+      "image": "farmstack/trusted-connector:1.0.0",
+      "tty": true,
+      "stdin_open": true,
+      "volumes": [
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "~/connector_configs/static_template_configs/allow-all-flows.pl:/root/deploy/allow-all-flows.pl",
+        "~/connector_configs/static_configs/etc/settings2.mapdb:/root/etc/settings.mapdb",
+        "~/connector_configs/logs/consumer/:/root/log/",
+        "../../fs-assets/sample-certificates/consumer-keystore.p12:/root/etc/consumer-keystore.p12",
+        "~/connector_configs/static_template_configs/truststore.p12:/root/etc/truststore.p12",
+        "~/connector_configs/:/root/deploy/example-consumer-routes.xml"
+      ],
+      "ports": [
+        "29292:29292"
+      ],
+      "networks": [
+        "ids-wide",
+        "consumer-internal"
+      ]
+    },
+    "consumer-app": {
+      "image": "farmstack/merge-csv-nodejs",
+      "ports": [
+        "8081:8081"
+      ],
+      "networks": [
+        "consumer-internal"
+      ]
+    }
+  },
+  "networks": {
+    "ids-wide": {
+      "driver": "bridge"
+    },
+    "consumer-internal": {
+      "driver": "bridge"
+    }
+  }
+}

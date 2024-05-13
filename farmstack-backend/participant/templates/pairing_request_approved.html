@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx"
+      crossorigin="anonymous"
+    />
+    <title>template</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        font-style: normal;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100vh;
+        /* border: 1px solid red; */
+      }
+
+      .mainBox {
+        /* border: 2px solid red; */
+        margin: 0 auto;
+        /* background-color:; */
+        border-collapse: collapse;
+        border-spacing: 0;
+        box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      .biggerCard {
+        /* height: 90vh; */
+        /* width: 500px; */
+        /* min-width: 33vw; */
+        /* border: 1px solid green; */
+        background-color: #eaeff2;
+
+        display: block;
+        /* flex-direction: column; */
+        row-gap: 55px;
+        padding: 33px 33px 0px 33px;
+        text-align: center;
+        position: relative;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 400;
+        line-height: 33px;
+        color: #4d4d4d;
+      }
+
+      .card {
+        background-color: white;
+        border: none;
+        outline: none;
+        width: 550px;
+        box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+        /* margin-top: 33px; */
+        border-radius: 10px 10px 10px 10px;
+        overflow: hidden;
+      }
+
+      .topLine {
+        /* border-radius: 10px 10px 0px 0px; */
+        /* border: none; */
+        background: #e0bd4a;
+        height: 11px;
+      }
+
+      .contentBox {
+        font-size: 16px;
+        padding: 33px;
+        /* max-width: 277px; */
+      }
+
+      .blackHead {
+        color: #4d4d4d;
+        font-weight: 700;
+        line-height: 16.64px;
+        margin-bottom: 5px;
+        font-size: 16px;
+      }
+
+      .yelloHead {
+        color: #d8af28;
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 16px;
+      }
+
+      .font12px {
+        font-size: 14px;
+        line-height: 16px;
+        font-weight: 400;
+      }
+
+      .desc {
+        color: #4d4d4d;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 16px;
+        margin-top: 5px;
+      }
+
+      .bottomLine {
+        /* border-radius: 0px 0px 10px 10px; */
+        /* border: none; */
+        background: #e0bd4a;
+        height: 11px;
+        /* margin-bottom: 53px; */
+      }
+
+      .margin15px {
+        margin-bottom: 15px;
+      }
+
+      .textCenter {
+        text-align: center;
+      }
+
+      .queriesBox {
+        width: 277px;
+        margin: 33px auto 33px auto;
+      }
+
+      .eachQuery {
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .yellowButton {
+        background-color: #dbbf60;
+        /* height: 35px; */
+        padding: 10px 50px;
+        color: white;
+        border: none;
+        outline: none;
+        font-weight: 400;
+        box-sizing: content-box;
+        width: fit-content;
+      }
+
+      .whiteButton {
+        border: 1px solid #dbbf60;
+        color: #dbbf60;
+        padding: 10px 50px;
+        background-color: white;
+        font-weight: 400;
+        box-sizing: content-box;
+        width: fit-content;
+      }
+
+      .logo {
+        margin: 33px auto;
+        /* width: 400px; */
+        /* border: 1px solid red; */
+      }
+
+      .bottomMostLine {
+        height: 11px;
+        background-color: #e0bd4a;
+        /* min-width: 564px; */
+        min-width: 400px;
+        margin: auto;
+
+        /* position: absolute; */
+        /* bottom: 0; */
+        /* z-index: 2; */
+      }
+
+      .dataBox {
+        /* display: flex; */
+        /* flex-direction: column; */
+        /* justify-content: center; */
+        /* border: 1px solid red; */
+        padding: 0 5%;
+      }
+
+      .eachLine {
+        display: flex;
+        justify-content: center;
+        margin: 4.5px auto;
+        align-items: center;
+        /* border: 1px solid red; */
+        /* width: 250px; */
+      }
+
+      .contentBoxValue {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+
+      .leftValue {
+        /* text-align: center; */
+        /* display: flex;
+        justify-content: center;
+        column-gap: 30px; */
+        /* align-items: center; */
+        /* margin-right: 28px; */
+        /* font-size: 12px;
+        font-weight: 400;
+        line-height: 14px;
+        color: #818488; */
+        /* border: 1px solid red; */
+      }
+
+      .rightValue {
+        /* text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 14px;
+        color: #818488; */
+        /* word-wrap: break-word; */
+      }
+
+      .dataBox td {
+        width: 50%;
+      }
+
+      .margin33px {
+        margin-bottom: 33px;
+      }
+
+      tbody tr:first-child td:last-child {
+        /* border: 1px solid red; */
+        /* border-top-left-radius: 10px !important; */
+        /* border-top-right-radius: 10px !important; */
+      }
+
+      tbody tr:last-child td:last-child {
+        /* border: 1px solid red; */
+        /* border-bottom-left-radius: 10px !important; */
+        /* border-bottom-right-radius: 10px !important; */
+      }
+
+      .btngrp {
+        /* border: 1px solid red; */
+        /* display: flex; */
+        /* justify-content: space-evenly; */
+        /* width: 400px; */
+        margin: 0 auto 33px auto;
+      }
+
+      .btngrp button {
+        /* margin-right: 10px; */
+        /* margin-left: 10px; */
+        font-size: 14px;
+      }
+
+      .table {
+        /* border: 1px solid red; */
+        padding: 5px;
+        /* font-size: 1px; */
+      }
+
+      .row {
+        padding: 5px;
+        /* border: 1px solid green; */
+      }
+      .row td {
+        padding: 5px;
+        /* display: inline-block; */
+        /* border: 1px solid red; */
+      }
+
+      .right {
+        /* border: 1px solid blue; */
+        text-align: left;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 16px;
+        color: #818488;
+        /* line-height:; */
+      }
+
+      .left {
+        /* margin-right: 1px; */
+        /* margin-right: 10px; */
+        text-align: right;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 14px;
+        color: #818488;
+      }
+
+      .table > :not(caption) > * > * {
+        border-bottom-width: 0px;
+      }
+      .connectorGridBox {
+        display: grid;
+        grid-template-columns: auto auto auto !important;
+        /* grid-auto-columns: ; */
+        justify-content: space-evenly;
+        grid-gap: 5px;
+        padding: 5px;
+      }
+      .orgGridBox {
+        display: grid;
+        grid-template-columns: auto auto auto !important;
+        /* grid-auto-columns: ; */
+        justify-content: space-evenly;
+        grid-gap: 5px;
+        padding: 5px;
+      }
+      .connectorGridBox div {
+        max-width: 200px;
+        overflow-wrap: break-word;
+        /* border: 1px solid red; */
+        /* margin: 10px; */
+      }
+      .orgGridBox div {
+        max-width: 200px;
+        overflow-wrap: break-word;
+        /* border: 1px solid red; */
+        /* margin: 10px; */
+      }
+      .connectorGridBox div:last-child {
+        max-width: none;
+        overflow-wrap: break-word;
+        /* border: 1px solid red; */
+        /* margin: 10px; */
+      }
+      .connectorGridBox > div {
+        text-align: left;
+      }
+      .orgGridBox > div {
+        text-align: left;
+      }
+      .connectorGridBox div > div:first-child {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 14px;
+        margin: 2px;
+      }
+      .connectorGridBox div > div:last-child {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 14px;
+        margin: 2px;
+      }
+      .connectorDetails div:last-child {
+        text-align: left;
+      }
+      .descGrid {
+        /* border: 1px solid red; */
+        color: #3d4a52;
+      }
+
+      .certiSpan {
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 16px;
+        color: #4d4d4d;
+        margin-top: 33px;
+        margin-bottom: 33px;
+      }
+      .connectorDetails table {
+        width: 100%;
+        /* margin-top: 33px; */
+      }
+      .connectorDetails table:first-child {
+        /* width: 100%; */
+        margin-top: 16px;
+      }
+      .connectorDetails table tr {
+        /* border: 1px solid red; */
+      }
+
+      .connectorDetails table tr td {
+        max-width: 110px;
+        min-width: 110px;
+        word-wrap: break-word;
+        vertical-align: top;
+        text-align: left;
+        color: #3d4a52;
+        font-size: 14px;
+      }
+      .pb20 {
+        padding-bottom: 20px !important;
+      }
+
+      .connectorDetails table tr:first-child td {
+        /* border: 1px solid red; */
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 14px;
+      }
+      .connectorDetails {
+        /* border: 1px solid red; */
+        /* padding: 10px; */
+        padding: 0px 33px 33px 33px;
+      }
+      .connectorDetails table tr:nth-child(2) td {
+        /* border: 1px solid red; */
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 16px;
+      }
+      .font14bold {
+        font-size: 14px;
+        font-weight: 600;
+        color: #3d4a52;
+      }
+      .font14light {
+        font-size: 14px;
+        font-weight: 400;
+        color: #3d4a52;
+      }
+      a {
+        color: #3d4a52 !important;
+        text-decoration: none !important;
+      }
+      .btngrp a {
+        font-weight: 400 !important;
+        font-size: 14px !important;
+        color: white !important;
+        text-decoration: none !important;
+      }
+      @media screen and (max-width: 480px) {
+        .biggerCard {
+          padding: 2px 2px 0 2px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- hello -->
+      <table cell class="mainBox">
+        <tbody>
+          <tr class="biggerCard">
+            <td>
+              <!-- <div class='title'>
+                A new dataset request has been uploded in &lt;datahub name&gt;.
+              </div> -->
+              <div class="card">
+                <!-- card starts -->
+                <div class="topLine"></div>
+                <div class="contentBox textCenter">
+                  <div>
+                    <div class="blackHead">
+                        Hi {% if consumer_admin_name %}
+                             {{ consumer_admin_name }}
+                                {% else %}
+                             {{ provider_admin_name }}
+                            {% endif %}
+                    </div>
+                    <div class="font14light">
+                      Your connector pairing request has been approved by
+                      {% if provider_org.name %}
+                        {{ provider_org.name }}
+                      {% else %}
+                        {{ consumer_org.name }}
+                      {% endif %}
+                      The data exchange has begun.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="connectorDetails">
+                  <div class="yelloHead">Connector details</div>
+                  <div>
+                    <table>
+                      <tr>
+                        <td>Connector name</td>
+                        <td>Connector type</td>
+                        <td>Dataset name</td>
+                      </tr>
+                      <tr>
+                        <td class="font14bold pb20">
+                          {{ consumer_connector.connector_name }}
+                        </td>
+                        <td class="font14bold pb20">
+                          {{ consumer_connector.connector_type }}
+                        </td>
+                        <td class="font14bold pb20">{{ dataset.name }}</td>
+                      </tr>
+                    </table>
+                    <table>
+                      <tr>
+                        <td>Description</td>
+                      </tr>
+                      <tr>
+                        <td class="font14bold">
+                          {{ consumer_connector.connector_description }}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="connectorDetails">
+                  <div class="yelloHead">Paired with</div>
+                  <div>
+                    <table>
+                      <tr>
+                        <td>Connector name</td>
+                        <td>Connector type</td>
+                        <td>Dataset name</td>
+                      </tr>
+                      <tr>
+                        <td class="font14bold pb20">
+                          {{ provider_connector.connector_name }}
+                        </td>
+                        <td class="font14bold pb20">
+                          {{ provider_connector.connector_type }}
+                        </td>
+                        <td class="font14bold pb20">{{ dataset.name }}</td>
+                      </tr>
+                    </table>
+                    <table>
+                      <tr>
+                        <td>Description</td>
+                      </tr>
+                      <tr>
+                        <td class="font14bold">
+                          {{ provider_connector.connector_description }}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- <div class='certiSpan'>
+                  Send the certificate to the &lt;participant's email id
+                  participant&gt;
+                </div> -->
+                <table class="btngrp">
+                  <tr>
+                    <td>
+                      <!-- <button class='yellowButton'>View details</button> -->
+                      <a target="_blank" class="yellowButton" href="{{ datahub_site }}/home/connectors/">View details</a>
+                    </td>
+                    <!-- <td>
+                      <button class='whiteButton'>Reject</button>
+                    </td> -->
+                  </tr>
+                </table>
+
+                <div class="bottomLine"></div>
+                <!-- card ends -->
+              </div>
+              <div class="logo">
+                <img
+                  src="new_farmstack_main_logo.svg"
+                  alt="FarmStack"
+                />
+              </div>
+            </td>
+          </tr>
+          <tr style="background-color: #eaeff2">
+            <td>
+              <div class="bottomMostLine"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

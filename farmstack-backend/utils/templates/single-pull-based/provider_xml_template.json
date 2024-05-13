@@ -1,0 +1,143 @@
+{
+    "beans": {
+      "@xmlns": "http://www.springframework.org/schema/beans",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xmlns:camel": "http://camel.apache.org/schema/spring",
+      "@xsi:schemaLocation": "http://www.springframework.org/schema/beans           http://www.springframework.org/schema/beans/spring-beans-4.2.xsd           http://camel.apache.org/schema/spring           http://camel.apache.org/schema/spring/camel-spring.xsd",
+      "camel:sslContextParameters": {
+        "@id": "serverSslContext",
+        "@certAlias": "1.0.1",
+        "camel:keyManagers": {
+          "@keyPassword": "password",
+          "camel:keyStore": {
+            "@resource": "etc/provider-keystore.p12",
+            "@password": "password"
+          }
+        },
+        "camel:trustManagers": {
+          "camel:keyStore": {
+            "@resource": "etc/truststore.p12",
+            "@password": "password"
+          }
+        }
+      },
+      "bean": [
+        {
+          "@id": "ArtifactRequestProcessor",
+          "@class": "de.fhg.aisec.ids.camel.processors.ArtifactRequestProcessor"
+        },
+        {
+          "@id": "ContractRequestProcessor",
+          "@class": "de.fhg.aisec.ids.camel.processors.ContractRequestProcessor"
+        },
+        {
+          "@id": "ContractAgreementReceiverProcessor",
+          "@class": "de.fhg.aisec.ids.camel.processors.ContractAgreementReceiverProcessor"
+        },
+        {
+          "@id": "TypeExtractionProcessor",
+          "@class": "de.fhg.aisec.ids.camel.processors.IdsMessageTypeExtractionProcessor"
+        },
+        {
+          "@id": "ResourceUpdateCreationProcessor",
+          "@class": "de.fhg.aisec.ids.camel.processors.ResourceUpdateCreationProcessor"
+        }
+      ],
+      "camelContext": {
+        "@xmlns": "http://camel.apache.org/schema/spring",
+        "route": [
+          {
+            "@id": "server",
+            "from": {
+              "@uri": "idscp2server://0.0.0.0:8989?sslContextParameters=#serverSslContext&useIdsMessages=true&tlsClientHostnameVerification=false"
+            },
+            "process": {
+              "@ref": "TypeExtractionProcessor"
+            },
+            "choice": {
+              "when": [
+                {
+                  "simple": "${exchangeProperty.ids-type} == 'ContractRequestMessage'",
+                  "log": {
+                    "@message": "### Handle ContractRequestMessage ###"
+                  },
+                  "setProperty": {
+                    "@name": "containerUri",
+                    "constant": "https://hub.docker.com/layers/164595253/farmstack/location-app-fao/restapi/images/sha256-a009fd3448d30ae505263eac9ebeb41fb2796dc57c3c541e37b97124227200f3#3001"
+                  },
+                  "process": {
+                    "@ref": "ContractRequestProcessor"
+                  }
+                },
+                {
+                  "simple": "${exchangeProperty.ids-type} == 'ContractAgreementMessage'",
+                  "log": {
+                    "@message": "### Handle ContractAgreementMessage ###"
+                  },
+                  "process": {
+                    "@ref": "ContractAgreementReceiverProcessor"
+                  },
+                  "removeHeader": {
+                    "@name": "idscp2-header"
+                  },
+                  "setBody": {
+                    "simple": "${null}"
+                  }
+                },
+                {
+                  "simple": "${exchangeProperty.ids-type} == 'ArtifactRequestMessage'",
+                  "log": {
+                    "@message": "### Handle ArtifactRequestMessage ###"
+                  },
+                  "process": {
+                    "@ref": "ArtifactRequestProcessor"
+                  },
+                  "to": {
+                    "@uri": "direct:sendData2"
+                  }
+                }
+              ],
+              "otherwise": {
+                "log": {
+                  "@loggingLevel": "ERROR",
+                  "@message": "### Server received unexpected message (otherwise branch): ${body} ### Header: ### ${headers[idscp2-header]}"
+                },
+                "removeHeader": {
+                  "@name": "idscp2-header"
+                },
+                "setBody": {
+                  "simple": "${null}"
+                }
+              }
+            }
+          },
+          {
+            "@id": "sendProviderData2",
+            "from": {
+              "@uri": "direct:sendData2"
+            },
+            "setHeader": [
+              {
+                "@name": "CamelHttpMethod",
+                "constant": "GET"
+              },
+              {
+                "@name": "Content-Type",
+                "constant": "application/json"
+              }
+            ],
+            "to": {
+              "@uri": "http://video-list-app-fao:3002/geopoints/videos"
+            },
+            "setProperty": {
+              "@name": "artifactUri",
+              "constant": "https://farmstack.digitalgreen.org/farmstackLocationFao"
+            },
+            "process": {
+              "@ref": "ResourceUpdateCreationProcessor"
+            }
+          }
+        ]
+      }
+    }
+  }
