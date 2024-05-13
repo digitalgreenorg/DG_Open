@@ -1,0 +1,22 @@
+{
+  "prerun": "# some code here",
+  "directory": "migrations",
+  "history": "migratehistory",
+  "models": [
+    "models.User",
+    "models.Language",
+    "models.Conversation",
+    "models.Messages",
+    "models.MessageMediaFiles",
+    "models.Resource",
+    "models.UserActions",
+    "models.MultilingualText",
+    "models.FollowUpQuestion",
+    "models.RetrievedChunk",
+    "models.RerankedChunk",
+    "models.RerankMetrics",
+    "models.GenerationMetrics",
+    "models.RephraseMetrics",
+    "models.RetrievalMetrics"
+  ]
+}
