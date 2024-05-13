@@ -1,0 +1,64 @@
+version: '3'
+volumes:
+  postgres-data:
+  media:
+
+services:
+  db:
+    image: postgres
+    restart: on-failure
+    env_file:
+      - ./.env
+    ports:
+      - '5432:5432'
+    volumes:
+      - "~/.postgres:/var/lib/postgresql/data"
+    networks:
+      - postgresql-network
+
+  datahub:
+    image: farmstack/fs_kenya_stage-ui:latest
+    container_name: datahub-ui
+    restart: on-failure
+    env_file:
+      - ./.env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-cert/private.key:/etc/nginx/cert/private.key
+      - ./nginx-cert/public.crt:/etc/nginx/cert/public.crt
+      - ./config/env_frontend.sh:/docker-entrypoint.d/env.sh
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - postgresql-network
+
+  datahub-be:
+    image: farmstack/fs_kenya_stage-be:latest
+    restart: on-failure
+    container_name: datahub-be
+    env_file:
+      - ./.env
+    command: >
+      sh -c 
+        "python manage.py makemigrations datahub accounts participant microsite &&
+         python manage.py migrate && python manage.py loaddata db_scripts/userrole_fixture.yaml &&
+         python manage.py loaddata db_scripts/admin.yaml &&
+         python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ~/.media/:/datahub/media
+      - ~/.protected/:/datahub/protected
+      - ./config/categories.json:/datahub/categories.json
+      - ./config/admin.yaml:/datahub/db_scripts/admin.yaml
+    links:
+      - db:db
+    networks:
+      - postgresql-network
+
+networks:
+  postgresql-network:
+    driver: bridge

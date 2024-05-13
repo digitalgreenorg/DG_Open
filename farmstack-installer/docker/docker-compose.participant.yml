@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./config/participant_dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    ports:
+      - "3306:3306"
+    networks:
+      - mysql-network
+
+  usm:
+    image: farmstack/usm-participant:1.0.0
+    container_name: fs-usm
+    env_file:
+      - ./.env
+    depends_on:
+      - "mysql"
+    volumes:
+      - ./config/default.json:/usr/src/app/config/default.json
+    ports:
+      - "6022:6022"
+    networks:
+      - mysql-network
+
+  graphql-api:
+    image: farmstack/participant-api:1.0.0
+    container_name: participant-api
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/connector_configs/:/FS_API/connector_configs/
+    env_file:
+      - ./.env
+    depends_on:
+      - "mysql"
+    ports:
+      - "8002:8002"
+    command: >
+      sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
+    networks:
+      - mysql-network
+
+  participant-ui:
+    image: farmstack/participant-ui:1.0.0
+    container_name: fs-participant-ui
+    env_file:
+      - ./.env
+    volumes:
+      - ./config/env_frontend.sh:/docker-entrypoint.d/env.sh
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx-cert/public.crt:/etc/nginx/cert/public.crt
+      - ./nginx-cert/private.key:/etc/nginx/cert/private.key
+    ports:
+      - "443:443"
+      - "80:80"
+    networks:
+      - mysql-network
+  
+networks:
+  mysql-network:
+    driver: bridge

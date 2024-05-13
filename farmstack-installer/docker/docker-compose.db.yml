@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  mysql:
+    image: mariadb:latest
+    container_name: mysql
+    env_file:
+      - ./.env
+    environment:
+      - MARIADB_DATABASE=${DB_NAME}
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MARIADB_USER=${DB_USER}
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./config/usermanagement_dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    ports:
+      - "3808:3808"
+    networks:
+      - mysql-network
+
+networks:
+  mysql-network:
+    driver: bridge
