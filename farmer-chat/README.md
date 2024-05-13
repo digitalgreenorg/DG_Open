@@ -88,4 +88,4 @@ Clone the [repo](https://github.com/digitalgreenorg/monorepo/edit/main/farmer-ch
 
 ## API specification
 
-Please refer: 
+Please refer: https://github.com/digitalgreenorg/monorepo/blob/main/farmer-chat/openapi.yaml
