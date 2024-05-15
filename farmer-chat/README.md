@@ -198,7 +198,7 @@ Please refer the section on configuration: [Setting up the .env file and .config
 	```
 
 ## Limitations
-1. The retrieved answers may be incomplete if the queries are not from the running text present in the content uploaded
+1. The retrieved answers may be incomplete if the asnwer to queries does not exist in a running text (paragraph mode) in the content documents. For example, the answer lies in tables, images, table of contents, embedded links etc.
 2. Sometimes, the Google-translate may detect a language which is absurd and bot answers back in the same language. This happens especially in cases where the query is incomplete
 3. Some browsers may have problem with accessing microphone which leads to issues while sending voice queries.
 
