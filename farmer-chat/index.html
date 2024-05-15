@@ -165,7 +165,7 @@
       #languageDropdown {
         width: 100%;
         padding: 5px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
         border-radius: 5px;
         border: 1px solid #ccc;
       }
@@ -178,6 +178,16 @@
       .no-scrollbar::-webkit-scrollbar {
         display: none; /* Safari and Chrome */
       }
+      .warning-message {
+        padding: 5px;
+        background-color: #ffcccb; /* Light red background */
+        color: #d8000c; /* Dark red text */
+        border: 1px solid #d8000c;
+        border-radius: 5px;
+        margin: 2px 0;
+        font-size: 10px;
+        text-align: center;
+      }
     </style>
   </head>
   <body class="flex items-center justify-start min-h-screen gap-28">
@@ -187,6 +197,18 @@
           <h2 class="mx-auto font-bold text-xl text-white">FarmerChat</h2>
         </a>
         <div id="langauge_selection_box">
+          <input type="email" id="emailInput" placeholder="Enter your email" />
+          <div id="language_selection_box" class="warning-message hidden">
+            Please enter valid email id
+          </div>
+          <button
+            class="form-input px-4 py-2 w-full rounded-l bg-gray-700 border-none"
+            onclick="saveEmail()"
+          >
+            Save Email
+          </button>
+        </div>
+        <div id="langauge_selection_box" class="langauge_selection_box">
           <select id="languageDropdown">
             <!-- Options will be populated here -->
           </select>
@@ -195,15 +217,6 @@
             onclick="setUserLanguage()"
           >
             Set Language
-          </button>
-        </div>
-        <div id="langauge_selection_box">
-          <input type="email" id="emailInput" placeholder="Enter your email" />
-          <button
-            class="form-input px-4 py-2 w-full rounded-l bg-gray-700 border-none"
-            onclick="saveEmail()"
-          >
-            Save Email
           </button>
         </div>
       </div>
@@ -290,7 +303,7 @@
           // Check if the email input is not empty
           localStorage.setItem("userEmail", email); // Save the email in local storage
           loadEmail();
-          alert("Email saved!");
+          fetchSupportedLanguages(true);
         } else {
           alert("Please enter an email address.");
         }
@@ -300,10 +313,11 @@
         const storedEmail = localStorage.getItem("userEmail");
         if (storedEmail) {
           document.getElementById("emailInput").value = storedEmail;
-          document.getElementById("sendButton").disabled = true; // Enable the button if email is stored
+          document.getElementById("sendButton").disabled = false; // Enable the button if email is stored
+          // document.getElementById("sendButton").classList.remove("disabled"); // Add disabled style
         } else {
-          document.getElementById("sendButton").disabled = true; // Disable the button if no email is stored
-          document.getElementById("sendButton").classList.add("disabled"); // Add disabled style
+          document.getElementById("sendButton").disabled = false; // Disable the button if no email is stored
+          // document.getElementById("sendButton").classList.add("disabled"); // Add disabled style
         }
       }
 
@@ -700,19 +714,36 @@
           });
       }
 
+      function showWarning() {
+        const warningBox = document.getElementById("language_selection_box");
+        warningBox.classList.remove("hidden"); // Remove 'hidden' to show the element
+      }
+
+      function hideWarning() {
+        const warningBox = document.getElementById("language_selection_box");
+        warningBox.classList.add("hidden"); // Add 'hidden' to hide the element
+      }
+
       // Function to fetch supported languages and populate the dropdown
       function fetchSupportedLanguages() {
-        fetch(
-          `${baseUrl}/api/language/languages/?email_id=system%40digitalgreen.org`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        )
+        let userMailId = localStorage.getItem("userEmail");
+        if (!userMailId) {
+          return;
+        }
+        fetch(`${baseUrl}/api/language/languages/?email_id=${userMailId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
           .then((response) => {
             if (!response.ok && response.status === 401) {
+              const dropdown = document.getElementById("languageDropdown");
+              const langauge_selection_box = document.querySelector(
+                ".langauge_selection_box"
+              );
+              showWarning();
+
               // Handle 401 Unauthorized specifically
               response.json().then((data) => {
                 showAlertMessage(data.message);
@@ -722,8 +753,16 @@
             return response.json();
           })
           .then((data) => {
+            hideWarning();
+            alert("Email saved!");
             if (!data.error) {
               const dropdown = document.getElementById("languageDropdown");
+              // Clear the dropdown
+              dropdown.innerHTML = "";
+              localStorage.setItem(
+                "language",
+                data?.language_data[0].language_bcp_code
+              );
               data.language_data.forEach((lang) => {
                 const option = document.createElement("option");
                 option.value = lang.language_id;
