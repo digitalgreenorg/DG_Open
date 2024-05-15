@@ -56,7 +56,7 @@ For more detailed instructions, please review the contribution guidelines listed
 
 If you encounter any issues or have questions regarding the FarmStack and Farmer-Chat projects, please open an issue in this repository or reach out for direct assistance:
 
-- **Email Support**: [support@farmstack.com](mailto:support@digitalgreen.org)
+- **Email Support**: [Support](mailto:support@digitalgreen.org)
 - **Issue Tracker**: You can report bugs and issues [here](https://github.com/digitalgreenorg/monorepo/issues) by opening a new issue.
 
 Our team is committed to providing timely and helpful support to ensure the success of all project contributors and users.
