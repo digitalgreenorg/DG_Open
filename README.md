@@ -1,74 +1,66 @@
-# FarmStack Monorepo
+# MonoRepo
 
-## Overview
-Welcome to the FarmStack Monorepo, a consolidated repository for managing the frontend, backend, and installer modules of the FarmStack project. This approach facilitates streamlined development, testing, and deployment processes by housing all related code and resources under a single repository umbrella.
+Welcome to the MonoRepo for FarmStack and Farmer-Chat! This repository serves as a centralized hub for managing both the FarmStack application components and the Farmer-Chat project. It offers the necessary tools and setups for digital farming management systems and community communication, providing a comprehensive and integrated approach to agricultural solutions.
 
-## Components
-The monorepo includes the following components:
+## Repository Structure
 
-- **FarmStackFrontend**: The user interface for the FarmStack application, built with modern web technologies(ReactJS).
-- **Backend**: The server-side components handling business logic, database interactions, and API services(Django).
-- **Installer**: Scripts and utilities to facilitate the installation and setup of the FarmStack application on linux environment.
+This MonoRepo is organized into several key components, each stored as a subtree:
+
+### FarmStack Frontend
+
+The FarmStack Frontend acts as the visual gateway for users, offering a responsive and intuitive interface built with the latest web technologies. It ensures a smooth interaction with various features of the FarmStack platform.
+
+- **Read the detailed [Frontend README](./farmstack-frontend/README.md)**
+
+### FarmStack Backend
+
+The backbone of the FarmStack application, the Backend manages business logic, database interactions, and data security. It supports seamless data transfer between the frontend and the database and provides essential APIs.
+
+- **Read the detailed [Backend README](./farmstack-backend/README.md)**
+
+### FarmStack Installer
+
+The FarmStack Installer is crucial for easy deployment of the application. It automates the installation and configuration of both frontend and backend components, ensuring they operate cohesively.
+
+- **Read the detailed [Installer README](./farmstack-installer/README.md)**
+
+### Farmer-Chat
+
+Included as a distinct but integral part of this MonoRepo, Farmer-Chat enables real-time communication among farmers and agricultural experts, enhancing community engagement and support.
+
+- **Read the detailed [Farmer-Chat README](./farmer-chat/README.md)**
 
 ## Getting Started
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-### Prerequisites
-Before you begin, ensure you have the following software installed on your system:
+To start using the components of this MonoRepo, clone it to your local machine:
 
-- [Node.js](https://nodejs.org/en/download/)
-- [Python 3](https://www.python.org/downloads/)
-- [Docker](https://docs.docker.com/get-docker/)
+```bash
+git clone https://github.com/digitalgreenorg/monorepo.git
+```
 
-### Installation
-Follow these steps to set up your development environment:
+## Contribution Guidelines
 
-1. **Clone the Repository**
-    ```bash
-    git clone https://github.com/digitalgreenorg/monorepo.git
-    cd monorepo
-    ```
+We warmly welcome contributions to both the FarmStack and Farmer-Chat projects. Here's how you can contribute:
 
-2. **Frontend Setup**
-    ```bash
-    cd frontend
-    npm install --force
-    npm run start
-    ```
+- **Fork the repository** - Start by forking the MonoRepo to your GitHub account.
+- **Clone your fork** - Clone your forked repository to your local machine.
+- **Create a branch** - Create a new branch for each feature or improvement.
+- **Make your changes** - Modify or add to the existing project as needed.
+- **Commit your changes** - Make sure your commits are clear and understandable.
+- **Push your changes** - Push your changes to your fork on GitHub.
+- **Submit a pull request** - Open a pull request from your fork to the main FarmStack repository. Provide a clear description of the changes and any other relevant information.
 
-3. **Backend Setup**
-    ```bash
-    cd ../backend
-    pip3 install -r requirements.txt
-    python3 manage.py runserver 0.0.0.0:8000
-    ```
+For more detailed instructions, please review the contribution guidelines listed in each component's README.
 
-4. **Installer Setup**
-    ```bash
-    cd ../installer
-    sudo python3 run.py
-    ```
+## Support and Contact
 
-## Usage
-Here is how you can use the application once installed:
+If you encounter any issues or have questions regarding the FarmStack and Farmer-Chat projects, please open an issue in this repository or reach out for direct assistance:
 
-- Access the frontend at `http://localhost:3000`.
-- Make API calls to the backend at `http://localhost:8000`.
+- **Email Support**: [support@farmstack.com](mailto:support@digitalgreen.org)
+- **Issue Tracker**: You can report bugs and issues [here](https://github.com/digitalgreenorg/monorepo/issues) by opening a new issue.
 
-## Contributing
-We encourage public contributions! Please review our `CONTRIBUTING.md` for the contribution guidelines.
+Our team is committed to providing timely and helpful support to ensure the success of all project contributors and users.
 
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
+## Thank You
 
-## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details.
-
-## Contact Information
-For more information on this project, please contact:
-
-- Email: farmstack@digitalgreen.org
-
+Thank you for choosing to work with FarmStack and Farmer-Chat to advance your farming solutions and community interactions! We look forward to seeing your contributions and are excited to collaborate on this journey of innovation.
