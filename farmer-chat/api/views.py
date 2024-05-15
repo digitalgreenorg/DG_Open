@@ -1,5 +1,7 @@
 import logging, asyncio, base64
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,10 +24,29 @@ logger = logging.getLogger(__name__)
 
 
 class ChatAPIViewSet(GenericViewSet):
+    """
+    Custom ViewSet chat services
+
+    Actions (operations)
+    --------------------
+        Get Answer for Text Query :
+            generate answer for a given user text query in text
+        Synthesise Audio :
+            generate audio in base64 format for a given text using Text-to-Speech
+        Transcribe Audio :
+            generate transcriptions or text for given voice query using Speech-to-Text
+        Get Answer by Voice Query :
+            generate answer for a given user voice query in voice
+
+    """
+
     authentication_classes = []
 
     @action(detail=False, methods=["post"])
     def get_answer_for_text_query(self, request):
+        """
+        Generate answer for a given user query
+        """
         email_id = request.data.get("email_id")
         original_query = request.data.get("query")
         response_data = {"message": None, "query": original_query, "error": False}
@@ -57,6 +78,9 @@ class ChatAPIViewSet(GenericViewSet):
 
     @action(detail=False, methods=["post"])
     def synthesise_audio(self, request):
+        """
+        Generate audio in base64 format using Text-to-speech for a given text
+        """
         email_id = request.data.get("email_id")
         original_text = request.data.get("text")
         message_id = request.data.get("message_id")
@@ -84,6 +108,9 @@ class ChatAPIViewSet(GenericViewSet):
 
     @action(detail=False, methods=["post"])
     def transcribe_audio(self, request):
+        """
+        Generate transcriptions or text for given voice query using Speech-to-Text
+        """
         email_id = request.data.get("email_id")
         original_query = request.data.get("query")
         query_language_bcp_code = request.data.get("query_language_bcp_code", Constants.LANGUAGE_BCP_CODE_NATIVE)
@@ -150,6 +177,9 @@ class ChatAPIViewSet(GenericViewSet):
 
     @action(detail=False, methods=["post"])
     def get_answer_by_voice_query(self, request):
+        """
+        Generate answer for a given user voice query in voice
+        """
         email_id = request.data.get("email_id", None)
         query = request.data.get("query", None)
         query_language_bcp_code = request.data.get("query_language_bcp_code", Constants.LANGUAGE_BCP_CODE_NATIVE)
@@ -199,10 +229,25 @@ class ChatAPIViewSet(GenericViewSet):
 
 
 class LanguageViewSet(GenericViewSet):
+    """
+    ViewSet for Language model (`database.models.Language`)
+
+    Actions (operations)
+    --------------------
+        Languages :
+            list the supported languages
+        Set Language :
+            save the user preferred language
+
+    """
+
     authentication_classes = []
 
     @action(detail=False, methods=["get"])
     def languages(self, request):
+        """
+        Fetches the list of supported languages
+        """
         email_id = request.GET.get("email_id", None)
         response_data = {"message": None, "error": False, "language_data": []}
 
@@ -228,6 +273,9 @@ class LanguageViewSet(GenericViewSet):
 
     @action(detail=False, methods=["post"])
     def set_language(self, request):
+        """
+        Save the user preferred language
+        """
         email_id = request.data.get("email_id", None)
         language_id = request.data.get("language_id", None)
         response_data = {"message": None, "error": False}

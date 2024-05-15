@@ -1,0 +1,17 @@
+# Django
+SECRET_KEY=<Django-Project-Secret-Key>
+
+# DB
+DB_USER=<DB-Username>
+DB_PASSWORD=<DB-Password>
+DB_HOST=<DB-Host-IP>
+DB_PORT=<DB-Port>
+DB_NAME=<DB-Name>
+DB_MAX_CONNECTIONS=<DB-Max-Connnections-for-Connection-Pool>
+DB_STALE_TIMEOUT=<DB-Stale-Timeout-Unused-Connections>
+
+# API Keys
+OPENAI_API_KEY=<OpenAI-API-Key>
+
+# Google auth
+GOOGLE_APPLICATION_CREDENTIALS=<Google-Application-Auth-Key-JSON-File>

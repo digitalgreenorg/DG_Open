@@ -1,32 +1,108 @@
-## Introduction to Farmer.chat - AI powered agricultural assistant
+
+# Farmer.chat - an AI powered agricultural assistant by Digital Green
+
+## Introduction
 Farmer chat is a multi-modal, multi-language QnA bot intended to assist farmers, extension workers, and agronomists. Powered by cutting-edge technologies like Large Language Models (LLMs), Generative AI and RAG (Retrieval Augmented Generation), Farmer.Chat is your go-to source for agricultural advice, tips, and news. As part of the Digital Green tech stack, Farmer.Chat relies on Farmstack to retrieve the content required for answering user queries. 
 
 ## Features
  - **Multi-Lingual Support**: Leveraging the power of Google Translate, Farmer.Chat can converse and provide information in multiple languages in both text and audio, allowing it to cater to users from diverse linguistic backgrounds.
- - **Vectorized Document Retrieval**: Retrieves the content required for answering the queries from Farmstack, a multi-tenant content and dataset exchange platform developed by [Digital Green](https://www.digitalgreen.org). Farmstack vectorises text from extensive agricultural PDF & Rich text documents, videos, websites etc. and retrieve relevant information based on vector similarity
+   
+ - **Vectorized Document Retrieval**: Retrieves the content required for answering the queries from Farmstack, a multi-tenant content and dataset exchange platform developed by [Digital Green](https://www.digitalgreen.org). Farmstack vectorises text from extensive agricultural PDF & Rich text documents, videos, websites etc. and retrieve relevant information based on vector similarity.
+   
  - **AI-Powered Chat**: Backed by RAG (Retrieval Augmented Generation) with a state-of-the-art AI pipeline comprising of below phases to answer user queries.
 	* User intent classification
 	* Query rephrasing
 	* Content Retrieval using Similarity search
 	* LLM Re-ranking of the content chunks retrieved
 	* Generation of the answer through custom-made prompts
+
  - **Support for Multi-channel interface**: The chat service is exposed over REST APIs using Django-Rest-Framework (DRF) which can be plugged to multiple chat interfaces like: Telegram, WhatsApp, Mobile app, Website, IVR etc.
+
+## Farmstack/Farmer.chat solution overview:
+Farmstack is a a multi-tenant content and dataset exchange platform developed by [Digital Green](https://www.digitalgreen.org). The Tenants/Organizations can upload data in various formats like PDFs, videos, RTF documents, websites etc. Farmstack vectorises text from these documents and retrieve relevant information based on vector similarity.
+
+The below diagram shows Farmer.Chat/FarmStack’s process, flow of information and control. 
+
+**Note**:  Sl No. 4, 5 and 6 will be setup for the hackathon day.
+
+### Users:
+The setup primarily will have two kinds of Users. They are, 
+
+1. Content curator/ Administrator
+	* They login to FarmStack Web Application. 
+	* Information flow happens through the steps (a), (b), (c) etc,.
+
+
+2. Farmer/ Front Line Extension Worker
+	* Information flow happens through the steps (1), (2), (3) etc,.
+	* The farmers/ frontline extension workers can access the services through a messenger or an app.
+
+**Administrator/Content Curator side**:
+- Uploading of the content(or content source) into FarmStack to create a knowledge base.
+- FarmStack converts the knowledge base to a vector store.
+- View analytics and conversation logs
+
+
+**Farmers/Frontline Extension Workers side**:
+- Routed from front end to application backend (for eg, messenger application like telegram and whatsapp)
+- The queries can be listened using API integration and passed to the backend Bot logic
+- The bot logic invokes retrieval from the vector store create on the knowledge base
+- It uses the LLM calls to generate the answer which is sent back to the user
+- The query and responses are logged in the DB
 
 ## Technology Overview
 
 - **AI Services** :  
 	* Google ASR (Automated Speech Recognition), Translation and TTS (Text-To-Speech)
 	* Open AI GPT-3.5 turbo for embedding creation, query rephrasing and generation. GPT-4 for Intent classification and LLM reranking
-	* QDrant for Vector store and similarity search based retrieval
 - **Language**: Python
-- **Frameworks**: Peewee ORM for Database interaction and Django-Rest-Framework for exposing APIs
+- **Frameworks**: Peewee ORM for Database interaction and Django-Rest-Framework for exposing REST APIs
 
-## Reference implementation to access chat services
- - **What is it for**:
-		 For the purpose of getting a feel of the working of Farmer.chat, the solution is hosted on a server to access the APIs and a reference User interface is implemented in naive HTML, CSS and Javascript for interacting with Farmer.chat where-in the users can send queries in text and voice and receive answer in text and audio.
-- **How to access it**: Run this HTML [file](Link to file) in a browser and send query by typing ⌨️ or recording voice 🎙️ 
+## API specification
 
-## Setup Farmer.chat in your environment
+REST APIs are implemented in Farmer.Chat to retrieve the answers for text and voice based user queries in both text and voice. Please refer [API specification](openapi.yaml) for full specification of APIs documented in OpenAPI V 3.0.0 format.
+
+## Access Farmer.Chat services from a pre-hosted environment
+
+ - The Farmer.chat solution is hosted on Digital Green server which is accessible through
+   * A Web-based User interface at [https://farmerchat.farmstack.co/opensource-ui/](https://farmerchat.farmstack.co/opensource-ui/)
+   * APIs at [https://farmerchat.farmstack.co/opensource-be/api/chat/](https://farmerchat.farmstack.co/opensource-be/api/chat/)
+     
+ - This solution uses the content from the Farmstack instance hosted at [https://datahubtest.farmstack.co/](https://datahubtest.farmstack.co/)
+
+ ### How to use the web-based interface ###
+   - Register and upload the content in [Farmstack](https://datahubtest.farmstack.co). Please refer [Farmstack User guide](https://docs.google.com/document/d/1gygByBqdv1ZaVn8MgcyTJ76vhRrtMZh3tBzC83DtEcc/edit?usp=sharing)
+
+   - Click on the [link](https://farmerchat.farmstack.co/opensource-ui/) to open the User Interface in a web browser
+   
+   - Enter the email-id registered in Farmstack and click on _Save Email_ 
+     ![Email](https://github.com/digitalgreenorg/agri.chat/assets/104351881/a372c903-4dc2-47d8-a8e0-8c830b4da3a6)
+   
+   - Ask queries in text (Language will be auto-detected for text based queries and response will be received in the detected language, hence language selection is not required.)
+     ![Text Query](https://github.com/digitalgreenorg/agri.chat/assets/104351881/d8332c0a-c60a-4500-9238-cbf1f32afe9d)
+   
+   - Tap on <img width="25" alt="image" src="https://github.com/digitalgreenorg/agri.chat/assets/104351881/67a67d7f-2ac6-45a0-ae08-0c5acd4f82af"> to start recording the voice query and once recording is done, tap <img width="25" alt="image" src="https://github.com/digitalgreenorg/agri.chat/assets/104351881/67a67d7f-2ac6-45a0-ae08-0c5acd4f82af"> again to stop recording and send the voice query. Language selection is a must before asking the voice queries for the ASR models to work best. Choose the required langauge from the options in left pane. If no langauge is selected, it will default to English in US accent. Ensure to click on _Set Language_ to set the language.
+     
+     ![Language](https://github.com/digitalgreenorg/agri.chat/assets/104351881/efda0917-8088-4bf3-bf2c-08b9a933c23c)
+
+   - After the query response is received, to listen to the audio of the response, click on <img width="25" alt="image" src="https://github.com/digitalgreenorg/agri.chat/assets/104351881/c316927b-eaf9-44f3-b371-7c29163335ea"> just below the response. 
+  
+ - **Note**:
+   1. The user interface is a reference implementation ONLY, built using naive HTML, CSS and Javascript for interacting with Farmer.chat and is part of the repo [index.html](index.html)
+   2. For the voice query to work, Please ensure that the browser permission is enabled to access the Microphone when it is prompted. This is tested on Chrome and Safari.
+   3. The chat history will be lost once the page is refreshed.
+
+## Setup Farmer.Chat in your environment
+Farmer.Chat can be setup to run in your own environment. The following can be customised:
+
+1. Prompts at various stages in pipeline (Intent classification, Rephrasing, Reranking and Generation)
+2. Choice of whether to log the transactions in Database
+3. Open AI model parameters like GPT-3 and GPT-4 model versions, temperature, MAX_TOKENS
+4. Languages that bot support and the default language for ASR
+5. Farmstack instance from where the content should be retrieved
+6. Chat history window to be considered during question rephrasing
+
+Please refer the section on configuration: [Setting up the .env file and .config.env file](#setting-up-the-env-file-and-configenv-file)
 
 ### Requirements
 1. Linux or Mac OS
@@ -36,56 +112,91 @@ Farmer chat is a multi-modal, multi-language QnA bot intended to assist farmers,
 5. Google application credentials JSON file for translation services
 6. Open AI api key
 
-**Note**:  Sl No. 4, 5 and 6 will be setup for the hackathon day.
+### Steps
 
-# Steps
+1. **Clone the repo**: 
 
-Clone the [repo](https://github.com/digitalgreenorg/monorepo/edit/main/farmer-chat) into an empty directory in IDE
-`git clone https://github.com/digitalgreenorg/monorepo/edit/main/farmer-chat`
+	Clone the [repo](https://github.com/digitalgreenorg/monorepo) into an empty directory in IDE
+   ```bash 
+	 git clone https://github.com/digitalgreenorg/monorepo
+	```
+	(If you are using VSCode, follow the steps  _Open VSCode -> File -> Open Folder -> Create a New Folder in desired directory -> Open -> Terminal -> New Terminal and then execute above git command_)
+   
+   Please install git command line for your OS from [here](https://git-scm.com/downloads)
 
-**Setting up the env file and .config.env file**:
-1. Place the .env and .config.env file directly in the project root directory <<Link to templates>>
+3. Open a new terminal in your IDE and switch to the farmer-chat directory<br>
+   ```bash 
+   cd monorepo/farmer-chat
+   ```
 
-2. _Variables to configure in .env file to your environment_: 
-      * **Database**: 
-		      `DB_USER=<Database Username>`
-		      `DB_PASSWORD=<Database password>`
-		      `DB_HOST=<Database Host IP or domain>`
-		      `DB_PORT=<Database port>`
-		      `DB_NAME=<Name of the database>`
-		      `DB_MAX_CONNECTIONS=<Maximum number of connections that can be present in the pool>`
-		      `DB_STALE_TIMEOUT=<Stale temeout for the Database connections>`
-		     
-      * **Google application credentials**: `GOOGLE_APPLICATION_CREDENTIALS=<Path to Google application credentials file>`
+4. #### Setting up the .env file and .config.env file:
+
+      Farmer.chat uses 2 environment files, one for setting up secrets (.env) and the other one for setting up other optional configurations (.config.env). Ensure both the files are directly under the farmer-chat directory. [.config.env](.config.env) is part of the repo and can readily be used. For .env, an example file [example.env](example_dot_env) file is added to the repo. User should create a file with name .env directly under the farmer-chat directory.
+
+      - Following Variables to be configured in **.env** file as per your environment:<br>
+         * **Google application credentials**: `GOOGLE_APPLICATION_CREDENTIALS=<Path to Google application credentials file>`
+         * **Open AI API key**: `OPENAI_API_KEY=<Open-AI API key>`
+         * **Database (required only if WITH_DB_CONFIG=True in .config.env file)**: <br>
+		       `DB_USER=<Database Username>`<br>
+		       `DB_PASSWORD=<Database password>`<br>
+		       `DB_HOST=<Database Host IP or domain>`<br>
+		       `DB_PORT=<Database port>`<br>
+		       `DB_NAME=<Name of the database>`<br>
+		       `DB_MAX_CONNECTIONS=<Maximum number of connections that can be present in the pool>`<br>
+		       `DB_STALE_TIMEOUT=<Stale timeout for the Database connections>`<br><br>
+	 Please contact [techsupport@digitalgreen.org](mailto:techsupport@digitalgreen.org) for a pre-configured environment file.
+           
+      - Following Variables can be configured in [.config.env](.config.env) file as per your environment:
+        * `CONTENT_DOMAIN_URL:<Farmstack Base URL for authentication and content retrieval>. ex: https://datahubtest.farmstack.co/be/`<br>
+        * `LANGUAGE_SHORT_CODE_NATIVE:<Default language code for Farmer-chat> ex: en`<br>
+        * `LANGUAGE_CODE_NATIVE:<Default language bcp code for Farmer-chat voice queries and ASR> ex: en-US`<br>
+ 
+ 	**Additional configuration**: The following variables can be configured if required:
+   	* `WITH_DB_CONFIG=<True/False> based on whether conversations should be logged in Database`
+   	* `DJANGO_DEBUG_MODE=<True/False> based on whether Django should be started in debug mode`
+	* `GENERATION_PROMPT=<Multi-line prompt to be used during generation of answer>`
+	* `REPHRASE_QUESTION_PROMPT=<Multi-line prompt to be used during question rephrasing>`
+	* `RERANKING_PROMPT_SINGLE_TEMPLATE=<Multi-line prompt to be used during reranking>`
+	* `GPT_3_MODEL=<GPT-3 model version to be used.>`
+	* `GPT_4_MODEL=<GPT-4 model version to be used.>`
+	* `TEMPERATURE=<temperature setting of the LLM.>`
+	* `MAX_TOKENS=<Maximum number of tokens in output of LLM>`
      
-      * **Open AI API key**: `OPENAI_API_KEY=<Open-AI API key>`
-     
- 3. _Variables to configure in .config.env file to your environment_: 
-	  * `CONTENT_DOMAIN_URL:<Farmstack Base URL for authentication and content retrieval>`
-	  * `LANGUAGE_SHORT_CODE_NATIVE:<Default language code for Farmer-chat>`
-	  * `LANGUAGE_CODE_NATIVE:<Default language bcp code for Farmer-chat voice queries and ASR>`
-	  *
-4. Open a terminal and Set current directory to the project root directory.
-5. Run the below commands in sequence      
-        - *python3 -m venv myenv* to create a virtual environment.
-        - *source myenv/bin/activate* to activate the virtual environment
-        - *pip install -r requirements.txt* to install the dependencies.
-        - *python3 manage.py runserver* to start the development server. The APIs are accessible at http://localhost:8000/api/chat/
-        
-		`python3 -m venv myenv`
-        `source myenv/bin/activate`
-        `pip install -r requirements.txt`
-        `python3 manage.py runserver`
+6. Run the below commands in sequence (to create and activate the virtual environment and install required dependencies)
+	```bash
+	 python3 -m venv myenv
+	 source myenv/bin/activate
+	 pip install -r requirements.txt
+	 ```
+ 
+ 5. Start the Django development server
+	```bash
+	 python3 manage.py runserver
+	 ```
 
-**Note:** correct env files will be shared for hackathon
+ 6. Once the development server is started, the APIs are accessible at http://localhost:8000/api/chat/
+ 7. Edit the [index.html](index.html) to point to http://localhost:8000/api/chat/ instead of https://farmerchat.farmstack.co/opensource-be/api/chat/ and the index.html can be used as explained in section [above](#how-to-use-the-web-based-interface).
 
-## Database setup steps (will be pre setup for hackathon)
+## Database setup steps (required only if Database config is enabled)
 
 1. Set current directory to project root directory after configuring env files
-2. Run command `cd database`
-3. Run command `pem migrate`
-4. Import the Languages and labels into the database `psql -h hostname -p port -U username -d database_name -f path/to/sql_file.sql`
+2. Run command 
+	```bash
+	cd database
+	```
+3. Run command 
+	```bash
+	pem migrate
+	```
+4. Import the Languages and labels into the database 
+	```bash
+	psql -h hostname -p port -U username -d database_name -f multilingual_text_data.sql
+	```
 
-## API specification
+## Limitations
+1. The retrieved answers may be incomplete if the queries are not from the running text present in the content uploaded
+2. Sometimes, the Google-translate may detect a language which is absurd and bot answers back in the same language. This happens especially in cases where the query is incomplete
+3. Some browsers may have problem with accessing microphone which leads to issues while sending voice queries.
 
-Please refer: https://github.com/digitalgreenorg/monorepo/blob/main/farmer-chat/openapi.yaml
+## Contact
+Please contact [techsupport@digitalgreen.org](mailto:techsupport@digitalgreen.org) for any queries.

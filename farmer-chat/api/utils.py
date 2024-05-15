@@ -15,6 +15,7 @@ from common.utils import (
     fetch_multilingual_texts_for_static_text_messages,
     get_user_by_email,
     fetch_corresponding_multilingual_text,
+    create_or_update_user_by_email,
 )
 from database.models import User
 from database.database_config import db_conn
@@ -32,6 +33,9 @@ logger = logging.getLogger(__name__)
 
 
 def authenticate_user_based_on_email(email_id):
+    """
+    Authenticate the user on content retrieval site
+    """
     authenticated_user = None
     try:
         # user_obj = get_record_by_field(User, "email", email_id)
@@ -63,9 +67,9 @@ def preprocess_user_data(
 
         if with_db_config and len(authenticated_user) >= 1:
             # save the user if it does not exist in the system
-            user_obj = get_or_create_user_by_email(
+            # user_obj = get_or_create_user_by_email(
+            user_obj = create_or_update_user_by_email(
                 {
-                    "id": authenticated_user.get("id"),
                     "email": email_id,
                     "phone": authenticated_user.get("phone_number", None),
                     "first_name": authenticated_user.get("first_name", None),

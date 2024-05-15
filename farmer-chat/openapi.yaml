@@ -6,7 +6,7 @@ info:
     API endpoints for retrieving answers for farming related queries via text
     and audio.
 servers:
-  - url: 'https://api.yourdomain.com'
+  - url: 'https://api.yourdomain.com/api/'
     description: Production server
 
 paths:
