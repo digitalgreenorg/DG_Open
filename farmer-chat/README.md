@@ -23,7 +23,6 @@ Farmstack is a a multi-tenant content and dataset exchange platform developed by
 
 The below diagram shows Farmer.Chat/FarmStack’s process, flow of information and control. 
 
-**Note**:  Sl No. 4, 5 and 6 will be setup for the hackathon day.
 
 ### Users:
 The setup primarily will have two kinds of Users. They are, 
