@@ -1,4 +1,5 @@
 
+
 # Farmer.chat - an AI powered agricultural assistant by Digital Green
 
 ## Introduction
@@ -23,6 +24,7 @@ Farmstack is a a multi-tenant content and dataset exchange platform developed by
 
 The below diagram shows Farmer.Chat/FarmStack’s process, flow of information and control. 
 
+**![](https://lh7-us.googleusercontent.com/lXKKRJbuvt7iXUhDqpumR0bqhtcWELxiRhMRnwgigV0pPIHrwFTEH4r4h6fP4Sf_9fnHjXLhLskRlkKeAjTMK7OUvc_50O3lwoE068e-gs0SWF56ehhG8iSjfuyLZPPBfjdTR52OWSFyF404wWjuVMw)**
 
 ### Users:
 The setup primarily will have two kinds of Users. They are, 
@@ -75,16 +77,19 @@ REST APIs are implemented in Farmer.Chat to retrieve the answers for text and vo
    - Click on the [link](https://farmerchat.farmstack.co/opensource-ui/) to open the User Interface in a web browser
    
    - Enter the email-id registered in Farmstack and click on _Save Email_ 
-     ![Email](https://github.com/digitalgreenorg/agri.chat/assets/104351881/a372c903-4dc2-47d8-a8e0-8c830b4da3a6)
+     **![](https://lh7-us.googleusercontent.com/SyQ6wOlU8v-Ee-C5BOPeXOrJsodVibY_-tFdvP1QGxaFvb94Ge8DtfCvGlAkVPnllnMlTytwmzeeM4GLUZP6GMlHopBlwiwLeSiHR5gwSZSGG06q_i3psZDoRQ0iShGPRkDBs2cBixE6sMO3VmKy-gw)**
    
    - Ask queries in text (Language will be auto-detected for text based queries and response will be received in the detected language, hence language selection is not required.)
-     ![Text Query](https://github.com/digitalgreenorg/agri.chat/assets/104351881/d8332c0a-c60a-4500-9238-cbf1f32afe9d)
-   
-   - Tap on <img width="25" alt="image" src="https://github.com/digitalgreenorg/agri.chat/assets/104351881/67a67d7f-2ac6-45a0-ae08-0c5acd4f82af"> to start recording the voice query and once recording is done, tap <img width="25" alt="image" src="https://github.com/digitalgreenorg/agri.chat/assets/104351881/67a67d7f-2ac6-45a0-ae08-0c5acd4f82af"> again to stop recording and send the voice query. Language selection is a must before asking the voice queries for the ASR models to work best. Choose the required langauge from the options in left pane. If no langauge is selected, it will default to English in US accent. Ensure to click on _Set Language_ to set the language.
      
-     ![Language](https://github.com/digitalgreenorg/agri.chat/assets/104351881/efda0917-8088-4bf3-bf2c-08b9a933c23c)
+     **![](https://lh7-us.googleusercontent.com/5KMTVf1pQ9J9Jt-JQ6PFWgSN1GeQ9TS3zVeRYkyQd6olNDs2WeJ6CqcQmRxTonDRTb0ANwqOS_Z5Uuy1O4oM2JQRs7GIJTyODw0__9ATWWRsRxnpweSH5mt3fSARcnWkxP1r0aIi_vImQIIPganJ0YE)**
+   
+   - Tap on <img width="25" alt="image" src="https://lh7-us.googleusercontent.com/0cooSWX0oh_CX_z-OnRG27jM3qDFigD4d1cqml90CBLFflj_Tg62DzK-6l6LzDoM9-pqWykbm48BL6zuUQtsKo-n8qNHxGI2ryOYEqaMGwF3l2VqUHACKXiQByZImOFbKONMfcwtffGNpAn26pNRQ54"> to start recording the voice query and once recording is done, tap <img width="25" alt="image" src="https://lh7-us.googleusercontent.com/0cooSWX0oh_CX_z-OnRG27jM3qDFigD4d1cqml90CBLFflj_Tg62DzK-6l6LzDoM9-pqWykbm48BL6zuUQtsKo-n8qNHxGI2ryOYEqaMGwF3l2VqUHACKXiQByZImOFbKONMfcwtffGNpAn26pNRQ54"> again to stop recording and send the voice query. Language selection is a must before asking the voice queries for the ASR models to work best. Choose the required langauge from the options in left pane. If no langauge is selected, it will default to English in US accent. Ensure to click on _Set Language_ to set the language.
+     
+     **![](https://lh7-us.googleusercontent.com/CoUACf4GEk1zqhpHfzlQRJUIyA3zqW9eCs6pqbQiWHTlc0EY5t6jgkct9hjjR-AL0d5JvyvszyUQ_HUovAxY3XhAWaTnhRGcEOCyuSf3kfkG7FTECgpmauN0HphhzahyKmeIUdJKWZh2b9oHyg1uaPw)**
 
-   - After the query response is received, to listen to the audio of the response, click on <img width="25" alt="image" src="https://github.com/digitalgreenorg/agri.chat/assets/104351881/c316927b-eaf9-44f3-b371-7c29163335ea"> just below the response. 
+   - After the query response is received, to listen to the audio of the response, click on <img width="25" alt="image" src="https://lh7-us.googleusercontent.com/Ot-VMHe1zrgHNGluL1YKCv5qXR6EbD-4wP2e3EPYYOV8Sywop8Nmfk4O5ZW0EJSZc3_-Oy_piqF5sBnV_dOXIUlqxon-k7EbAppV8YLYN2PV65RPDWrHB49nkFo5LSgSwdNPO-AULuU40T0QN2m2l30"> just below the response. 
+
+**![](https://lh7-us.googleusercontent.com/DB2KMFSLPPizaJI1BUGdISEH10Kh59sLUroWr02rhAmuhoU2wwMLxnrZdvtzPCj-_fNTilHzGXGNASQg8YyGDwNz13SxCA6l5wASZ7OVdG7_kC6hmf8dLu_R4pt14SPVhKM2eetfI8fxjlsZev2YHEg)**
   
  - **Note**:
    1. The user interface is a reference implementation ONLY, built using naive HTML, CSS and Javascript for interacting with Farmer.chat and is part of the repo [index.html](index.html)
