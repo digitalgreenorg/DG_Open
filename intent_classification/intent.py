@@ -5,7 +5,7 @@ from intent_classification.constants import IntentConstants
 
 async def classify_intent(qn):
     prompt = Config.INTENT_CLASSIFICATION_PROMPT_TEMPLATE.format(input=qn)
-    intent_response, ex, retries = await make_openai_request(prompt, model=Config.GPT_4_TURBO_PREVIEW_LATEST)
+    intent_response, ex, retries = await make_openai_request(prompt, model=Config.GPT_4_MODEL)
     return intent_response.choices[0].message.content if intent_response else IntentConstants.USER_INTENT_FARMING
 
 

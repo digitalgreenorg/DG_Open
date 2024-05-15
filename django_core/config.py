@@ -32,11 +32,8 @@ class Config:
 
     # openAI config
     OPEN_AI_KEY = ENV_CONFIG.get("OPENAI_API_KEY")
-    GPT_3_5_TURBO = ENV_CONFIG.get("GPT_3_5_TURBO", "gpt-3.5-turbo")
-    GPT_3_5_TURBO_UPDATED = ENV_CONFIG.get("GPT_3_5_TURBO_UPDATED", "gpt-3.5-turbo-1106")
-    GPT_4 = ENV_CONFIG.get("gpt-4", "gpt-4")
-    GPT_4_TURBO_PREVIEW = ENV_CONFIG.get("gpt-4-1106-preview", "gpt-4-1106-preview")
-    GPT_4_TURBO_PREVIEW_LATEST = ENV_CONFIG.get("GPT_4_TURBO_PREVIEW_LATEST", "gpt-4-0125-preview")
+    GPT_3_MODEL = ENV_CONFIG.get("GPT_3_MODEL", "gpt-3.5-turbo")
+    GPT_4_MODEL = ENV_CONFIG.get("GPT_4_MODEL", "gpt-4-0125-preview")
     TEMPERATURE = ENV_CONFIG.get("TEMPERATURE", 0)
     MAX_TOKENS = ENV_CONFIG.get("MAX_TOKENS", 500)
     CHAT_HISTORY_WINDOW = ENV_CONFIG.get("CHAT_HISTORY_WINDOW", 4)

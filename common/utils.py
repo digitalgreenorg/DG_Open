@@ -150,6 +150,24 @@ def get_or_create_user_by_email(user_data: dict) -> User:
     return user_obj
 
 
+def create_or_update_user_by_email(user_data: dict) -> User:
+    user_obj = None
+    email_id = user_data.get("email", None)
+    try:
+        user_obj = get_record_by_field(User, "email", email_id)
+        if not user_obj:
+            user_obj = create_record(User, user_data)
+            logger.info(f"New User created for the email_id:{email_id}")
+        else:
+            user_obj = update_record(User, user_obj.id, user_data)
+            logger.info(f"Updated User with email_id:{email_id}")
+
+    except Exception as e:
+        logger.error(e, exc_info=True)
+
+    return user_obj
+
+
 def create_follow_up_questions(data) -> FollowUpQuestion:
     # def insert_many_objects(data, ModelName):
     # with database_config.db:
@@ -316,6 +334,9 @@ def decode_base64_to_binary(base64_string):
 
 
 def get_user_by_email(email_id):
+    """
+    Query the user with email ID
+    """
     user = None
     try:
         with db_conn:
@@ -337,6 +358,9 @@ def get_user_by_email(email_id):
 
 
 def set_user_preferred_language(user_id, language_id):
+    """
+    Save the user preferred language for the specified user
+    """
     saved_user_preferred_language = update_record(User, user_id, {"preferred_language_id": language_id})
     return saved_user_preferred_language
 

@@ -24,6 +24,9 @@ def get_language_by_code(code: str) -> Language:
 
 
 def get_all_languages() -> list:
+    """
+    Query the list of all active languages
+    """
     language_list = []
 
     try:
@@ -47,6 +50,9 @@ def get_all_languages() -> list:
 
 
 def get_language_by_id(language_id):
+    """
+    Query a specific language by the given language ID
+    """
     language = {}
     try:
         with db_conn:

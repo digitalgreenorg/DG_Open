@@ -19,7 +19,7 @@ from common.constants import Constants
 
 async def make_openai_request(
     prompt_message,
-    model=Config.GPT_3_5_TURBO,
+    model=Config.GPT_3_MODEL,
     temperature=0,
     initial_delay: float = 1,
     exponential_base: float = 2,

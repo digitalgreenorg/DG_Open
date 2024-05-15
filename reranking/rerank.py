@@ -99,7 +99,7 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
 
     rerank_request_start_time = datetime.datetime.now()
     reranking_results = await asyncio.gather(
-        *(make_openai_request(prompt, model=Config.GPT_4_TURBO_PREVIEW_LATEST) for prompt in rerank_prompt_list)
+        *(make_openai_request(prompt, model=Config.GPT_4_MODEL) for prompt in rerank_prompt_list)
     )
     rerank_request_end_time = datetime.datetime.now()
 

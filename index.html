@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta
+      name="description"
+      content="Join our Dark Theme Chat App, a modern and responsive messaging platform that mimics a chatbot-like interaction. Engage in conversations with a smart AI, and enjoy a sleek, user-friendly design optimized for all devices."
+    />
+    <meta
+      name="keywords"
+      content="Dark Theme Chat App, Responsive Chat Application, Modern Messaging Platform, AI Chatbot, User-Friendly Chat Interface"
+    />
+    <meta name="author" content="YourName or YourCompanyName" />
+    <meta property="og:title" content="Dark Theme Chat App" />
+    <meta
+      property="og:description"
+      content="Experience a modern and responsive chatbot interface, designed to provide seamless interaction with AI in a user-friendly dark theme environment."
+    />
+    <meta
+      property="og:image"
+      content="URL_to_an_image_that_represents_the_app"
+    />
+    <meta property="og:url" content="URL_of_your_website" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Dark Theme Chat App" />
+    <meta
+      name="twitter:description"
+      content="Join our chat app to engage with a smart AI in a sleek, responsive environment designed for modern users."
+    />
+    <meta
+      name="twitter:image"
+      content="URL_to_an_image_that_represents_the_app"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="https://digitalgreen.org/wp-content/themes/digital-green/images/favicons/android-chrome-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="https://digitalgreen.org/wp-content/themes/digital-green/images/favicons/android-chrome-96x96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="https://digitalgreen.org/wp-content/themes/digital-green/images/favicons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="https://digitalgreen.org/wp-content/themes/digital-green/images/favicons/favicon-16x16.png"
+    />
+
+    <!-- Include TailwindCSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@^3.0/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Include TailwindCSS Typography -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@^0.5/dist/typography.min.css"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+
+    <title>Farmer Chat App</title>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+      body {
+        background-color: #1a202c;
+        color: #cbd5e0;
+      }
+      #chat {
+        background-color: #2d3748;
+        border-radius: 8px;
+        /* max-width: 70%; */
+      }
+      .message {
+        display: flex;
+        /* margin: 8px; */
+        padding: 10px;
+        border-radius: 12px;
+        color: white;
+        align-items: flex-start;
+      }
+      .user {
+        background-color: #828ea3b5;
+        margin-right: auto;
+        text-align: left;
+      }
+      .bot {
+        background-color: #4a5568;
+
+        text-align: left;
+      }
+
+      input,
+      button {
+        transition: all 0.2s ease-in-out;
+      }
+      input:focus,
+      button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+      }
+      button:hover {
+        background-color: #2b6cb0;
+      }
+
+      .prose p {
+        color: white; /* Dark grey text color */
+        font-size: 16px; /* Adjust the font size */
+      }
+
+      .prose a,
+      .prose li,
+      .prose,
+      .prose strong {
+        color: white; /* Custom color for links */
+      }
+
+      .disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #langauge_selection_box {
+        width: 100%;
+        padding: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      #langauge_selection_box select {
+        height: 40px;
+        /* background-color: rgba(128, 128, 128, 0.687); */
+        color: black;
+      }
+      #languageDropdown {
+        width: 100%;
+      }
+      #langauge_selection_box input {
+        color: black !important;
+        /* margin-bottom: 1; */
+      }
+      #emailInput,
+      #languageDropdown {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+
+      .no-scrollbar {
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+        scrollbar-width: none; /* Firefox */
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none; /* Safari and Chrome */
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-start min-h-screen gap-28">
+    <div class="flex flex-col w-64 h-screen px-4 py-8 bg-[#2d3748] shadow-md">
+      <div class="flex flex-col items-center mt-4 -mx-4">
+        <a href="">
+          <h2 class="mx-auto font-bold text-xl text-white">FarmerChat</h2>
+        </a>
+        <div id="langauge_selection_box">
+          <select id="languageDropdown">
+            <!-- Options will be populated here -->
+          </select>
+          <button
+            class="form-input px-4 py-2 w-full rounded-l bg-gray-700 border-none"
+            onclick="setUserLanguage()"
+          >
+            Set Language
+          </button>
+        </div>
+        <div id="langauge_selection_box">
+          <input type="email" id="emailInput" placeholder="Enter your email" />
+          <button
+            class="form-input px-4 py-2 w-full rounded-l bg-gray-700 border-none"
+            onclick="saveEmail()"
+          >
+            Save Email
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-[70%]">
+      <div
+        id="chat"
+        class="overflow-y-auto p-4 rounded h-[600px] mb-4 space-y-2 relative no-scrollbar"
+      >
+        <!-- Welcome Message and Logo -->
+        <div
+          id="welcomeMessage"
+          class="absolute inset-0 h-96 w-96 top-36 left-72 flex flex-col items-center justify-center text-center p-4 bg-opacity-90 transition-opacity duration-500"
+        >
+          <img
+            src="https://farmerchat.vercel.app/primary-logo.svg"
+            alt="Farmer Chat Logo"
+            class="mb-4 w-60"
+          />
+          <!-- Adjust the path and size as needed -->
+          <h1 class="text-2xl font-bold text-white mb-2">
+            Welcome to Farmer Chat
+          </h1>
+          <p class="text-white">
+            We're here to help you with your agricultural queries. Please type
+            your message below to start chatting.
+          </p>
+        </div>
+
+        <!-- Messages will be displayed here -->
+      </div>
+
+      <!-- <hr /> -->
+      <!-- <div id="responseLoadingIcon" class="hidden">
+        <i class="fas fa-spinner fa-spin"></i> Loading...
+      </div> -->
+      <div class="flex">
+        <button
+          id="recordButton"
+          onclick="toggleRecording(this)"
+          class="bg-red-500 text-white font-bold p-2 rounded-full flex items-center justify-center w-10 h-10"
+          title="Record Audio"
+        >
+          <i class="fas fa-microphone" id="main-mic"></i>
+          <span id="recordingIcon" class="hidden">
+            <i class="fas fa-circle text-red-700 animate-pulse"></i>
+          </span>
+          <span id="loadingIconAudio" class="hidden"
+            ><i class="fas fa-spinner fa-spin"></i
+          ></span>
+        </button>
+
+        <input
+          id="userInput"
+          type="text"
+          class="form-input px-4 py-2 w-full rounded-l bg-gray-700 border-none"
+          placeholder="Type your message..."
+          onkeypress="handleKeyPress(event)"
+        />
+        <button
+          onclick="sendMessage()"
+          class="bg-blue-500 text-white font-bold py-2 px-4 rounded-r flex gap-1"
+          id="sendButton"
+        >
+          Send
+          <span id="loadingIcon" class="hidden"
+            ><i class="fas fa-spinner fa-spin"></i
+          ></span>
+        </button>
+      </div>
+    </div>
+    <script>
+      let counter = 0;
+      let userMailId = localStorage.getItem("userEmail");
+      let baseUrl = "https://farmerchat.farmstack.co/opensource-be";
+      function showAlertMessage(message) {
+        alert(message);
+      }
+
+      function saveEmail() {
+        const email = document.getElementById("emailInput").value;
+        if (email) {
+          // Check if the email input is not empty
+          localStorage.setItem("userEmail", email); // Save the email in local storage
+          loadEmail();
+          alert("Email saved!");
+        } else {
+          alert("Please enter an email address.");
+        }
+      }
+
+      function loadEmail() {
+        const storedEmail = localStorage.getItem("userEmail");
+        if (storedEmail) {
+          document.getElementById("emailInput").value = storedEmail;
+          document.getElementById("sendButton").disabled = true; // Enable the button if email is stored
+        } else {
+          document.getElementById("sendButton").disabled = true; // Disable the button if no email is stored
+          document.getElementById("sendButton").classList.add("disabled"); // Add disabled style
+        }
+      }
+
+      // Call loadEmail on page load to set the email input value from local storage
+      window.onload = loadEmail;
+
+      function processApiResponse(data) {
+        console.log("🚀 ~ processApiResponse ~ data:", data);
+        let responseText = removeFollowUpQuestions(data.response);
+        let responseHtml = renderMarkdown(responseText);
+        responseHtml = `<div class="prose min-w-full">${responseHtml}</div>`;
+
+        // Handle follow-up questions
+        if (data.follow_up_questions && data.follow_up_questions.length > 0) {
+          responseHtml += `<div class="mb-2 font-bold">Follow-up Questions:</div><ul class="list-disc pl-5 space-y-2">`;
+          data.follow_up_questions.forEach((question) => {
+            responseHtml += `<li class="flex justify-between items-center">
+                            <span>${question.question}</span>
+                            <button onclick="askFollowUpQuestion('${question.question.replace(
+                              /'/g,
+                              "\\'"
+                            )}')"
+                                    class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                         </li>`;
+          });
+          responseHtml += `</ul>`;
+        }
+
+        // Add a play button for audio if message_id is available
+        if (!data.error) {
+          responseHtml += `<div class="mt-4 flex items-center">
+                          <button class="playAudioButton bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                                  data-message-id="${counter++}" data-response-text="${escapeHtmlAttribute(
+            data.response
+          )}">
+      <i class="fa-solid fa-volume-high"></i>
+                          </button>
+                       </div>`;
+        }
+
+        addToChatWindow("bot", responseHtml);
+      }
+
+      // Function to toggle audio playback
+      function toggleAudio(button) {
+        const audio = button.nextElementSibling;
+        if (audio.paused) {
+          audio.play();
+          button.innerHTML = '<i class="fas fa-pause"></i> Pause Audio'; // Change button to show pause icon
+        } else {
+          audio.pause();
+          button.innerHTML = '<i class="fas fa-play"></i> Play Audio'; // Change button to show play icon
+        }
+      }
+
+      //401 handled
+      function sendMessage() {
+        var welcomeMessage = document.getElementById("welcomeMessage");
+        if (welcomeMessage) {
+          welcomeMessage.style.opacity = "0"; // Start the fade-out
+          setTimeout(function () {
+            welcomeMessage.style.display = "none"; // Completely hide after transition
+          }, 500); // Corresponds with the duration-500 in TailwindCSS
+        }
+
+        var input = document.getElementById("userInput");
+        var message = input.value.trim();
+        var loadingIcon = document.getElementById("loadingIcon");
+        // var responseLoadingIcon = document.getElementById(
+        //   "responseLoadingIcon"
+        // ); // Get the response loading indicator
+        if (message === "") return;
+
+        // Show loading icon
+        loadingIcon.classList.remove("hidden");
+        // responseLoadingIcon.classList.remove("hidden");
+        input.value = "";
+        addToChatWindow("user", message);
+        addToChatWindow(
+          "bot",
+          "<i class='fas fa-spinner fa-spin'></i> Loading...",
+          true
+        ); // Add temporary loading message
+        let userMailId = localStorage.getItem("userEmail");
+
+        fetch(`${baseUrl}/api/chat/get_answer_for_text_query/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email_id: userMailId,
+            query: message,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok && response.status === 401) {
+              // Handle 401 Unauthorized specifically
+              response.json().then((data) => {
+                // showAlertMessage(data.message);
+                processApiResponse({
+                  message: "Sucessful retrieval of answer for the above query.",
+                  query: "Tell me about Wheat Varieties for Low Water",
+                  error: true,
+                  data: [],
+                  response: data.message,
+                  follow_up_questions: [],
+                  response_audio: null,
+                });
+              });
+              // throw new Error("Unauthorized");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            var loadingMessage = document.getElementById("loadingMessage");
+            if (loadingMessage) {
+              loadingMessage.remove(); // Remove the loading message from the chat
+            }
+
+            loadingIcon.classList.add("hidden");
+            // responseLoadingIcon.classList.add("hidden");
+            if (!data.error) {
+              processApiResponse(data);
+            } else {
+              processApiResponse({
+                message: "Sucessful retrieval of answer for the above query.",
+                query: "Tell me about Wheat Varieties for Low Water",
+                error: true,
+                data: [],
+                response: data.message ?? "Something went wrong...",
+                follow_up_questions: [],
+                response_audio: null,
+              });
+              // addToChatWindow("bot", "Failed to get response from API.");
+            }
+          })
+          .catch((error) => {
+            console.log("🚀 ~ sendMessage ~ error:", error);
+            var loadingMessage = document.getElementById("loadingMessage");
+            if (loadingMessage) {
+              loadingMessage.remove(); // Remove the loading message from the chat
+            }
+            loadingIcon.classList.add("hidden");
+            // responseLoadingIcon.classList.add("hidden");
+            console.error("Error:", error);
+
+            processApiResponse({
+              message: "Sucessful retrieval of answer for the above query.",
+              query: "Tell me about Wheat Varieties for Low Water",
+              error: true,
+              data: [],
+              response: error ?? "Something went wrong...",
+              follow_up_questions: [],
+              response_audio: null,
+            });
+
+            // addToChatWindow("bot", "An error occurred while fetching data.");
+          });
+      }
+
+      function askFollowUpQuestion(question) {
+        // Set the input field with the question and send the message
+        document.getElementById("userInput").value = question;
+        sendMessage();
+      }
+
+      function addToChatWindow(sender, htmlContent, isTemporary = false) {
+        var chatWindow = document.getElementById("chat");
+        var messageElement = document.createElement("div");
+        var avatarImage = document.createElement("img");
+        avatarImage.style.width = "40px"; // Set avatar size
+        avatarImage.style.height = "40px";
+        avatarImage.style.borderRadius = "50%"; // Make the image round
+        avatarImage.style.marginRight = "10px"; // Add some spacing
+        avatarImage.style.background = "white"; // Add some spacing
+        avatarImage.style.padding = "5px"; // Add some spacing
+
+        if (sender === "user") {
+          avatarImage.src =
+            "https://via.placeholder.com/150/cccccc/969696.png?text=User"; // Green placeholder for user
+          messageElement.className = "message user";
+        } else {
+          avatarImage.src = "	https://farmerchat.vercel.app/secondary-logo.svg"; // Blue placeholder for bot
+          messageElement.className = "message bot";
+        }
+
+        var messageContent = document.createElement("div");
+        messageContent.innerHTML = htmlContent;
+
+        messageElement.appendChild(avatarImage); // Append the avatar image first
+        messageElement.appendChild(messageContent); // Then append the message content
+
+        chatWindow.appendChild(messageElement);
+
+        if (isTemporary) {
+          messageElement.id = "loadingMessage"; // Assign an ID to the temporary loading message
+        }
+        chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
+      }
+
+      function handleKeyPress(event) {
+        if (event.key === "Enter") {
+          event.preventDefault(); // Prevent the default action to stop form submission
+          sendMessage();
+        }
+      }
+
+      function fetchAndPlayAudio(message_id, responseText) {
+        console.log("🚀 ~ fetchAndPlayAudio ~ message_id:", message_id);
+        let playButton = document.querySelector(
+          `button[data-message-id="${message_id}"]`
+        );
+        if (!playButton) return; // Early exit if button is not found
+
+        playButton.disabled = true; // Disable button to prevent multiple clicks
+        playButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // Show loading spinner
+        let userMailId = localStorage.getItem("userEmail");
+
+        fetch(`${baseUrl}/api/chat/synthesise_audio/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message_id: null,
+            text: responseText,
+            email_id: userMailId,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok && response.status === 401) {
+              // Handle 401 Unauthorized specifically
+              response.json().then((data) => {
+                showAlertMessage(data.message);
+              });
+              throw new Error("Unauthorized");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!data.error && data.audio) {
+              let audio = new Audio(`data:audio/ogg;base64,${data.audio}`);
+              audio.play();
+              playButton.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; // Reset button text
+            } else {
+              playButton.innerHTML = "Failed to load audio";
+              console.log("Failed to fetch audio from the API.");
+            }
+            playButton.disabled = false;
+          })
+          .catch((error) => {
+            playButton.innerHTML = "Error";
+            playButton.disabled = false;
+
+            console.error("Error:", error);
+          });
+      }
+
+      function escapeHtmlAttribute(str) {
+        return str.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+
+      document
+        .getElementById("chat")
+        .addEventListener("click", function (event) {
+          // Use .closest() to find the nearest ancestor which is a button with class 'playAudioButton'
+          const playButton = event.target.closest("button.playAudioButton");
+
+          if (playButton) {
+            const messageId = playButton.getAttribute("data-message-id");
+            const responseText = playButton.getAttribute("data-response-text");
+            fetchAndPlayAudio(messageId, responseText);
+          }
+        });
+
+      function renderMarkdown(markdownText) {
+        const html = marked.parse(markdownText);
+        return html;
+      }
+
+      function removeFollowUpQuestions(text) {
+        const startIndex = text.indexOf(
+          "Here are the follow-up questions you can ask:"
+        );
+        if (startIndex !== -1) {
+          return text.substring(0, startIndex); // Returns the string up to the start of the unwanted section
+        }
+        return text; // Returns the original text if the specific phrase isn't found
+      }
+
+      let mediaRecorder;
+      let audioChunks = [];
+
+      async function toggleRecording(button) {
+        const recordingIcon = document.getElementById("recordingIcon");
+
+        if (button.dataset.recording === "true") {
+          // Stop recording
+          mediaRecorder.stop();
+          button.dataset.recording = "false";
+          recordingIcon.classList.add("hidden");
+          mainMic.classList.remove("hidden");
+        } else {
+          // Start recording
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Recording is not supported in this browser.");
+            return;
+          }
+          button.dataset.recording = "true";
+          var mainMic = document.getElementById("main-mic");
+
+          mainMic.classList.add("hidden");
+
+          recordingIcon.classList.remove("hidden");
+
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.start();
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+          };
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/mp4" });
+            audioChunks = [];
+            handleAudioSuccess(audioBlob);
+          };
+        }
+      }
+
+      function handleAudioSuccess(audioBlob) {
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = function () {
+          const base64data = reader.result;
+          const base64AudioMessage = base64data.split(",")[1]; // Remove the header part from the Base64 string
+          sendAudioToServer(base64AudioMessage);
+        };
+      }
+
+      function sendAudioToServer(audioBase64) {
+        var loadingIconAudio = document.getElementById("loadingIconAudio");
+        var mainMic = document.getElementById("main-mic");
+        if (!audioBase64) return;
+
+        // Show loading icon
+        loadingIconAudio.classList.remove("hidden");
+        mainMic.classList.add("hidden");
+        let userMailId = localStorage.getItem("userEmail");
+
+        const url = `${baseUrl}/api/chat/transcribe_audio/`;
+        const data = {
+          email_id: userMailId,
+          query: audioBase64,
+          query_language_bcp_code: localStorage.getItem("language") ?? "en-US",
+        };
+
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((response) => {
+            if (!response.ok && response.status === 401) {
+              // Handle 401 Unauthorized specifically
+              response.json().then((data) => {
+                showAlertMessage(data.message);
+              });
+              throw new Error("Unauthorized");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Success:", data);
+            // Handle success response
+            loadingIconAudio.classList.add("hidden");
+            mainMic.classList.remove("hidden");
+            if (data?.confidence_score > 0.7) {
+              askFollowUpQuestion(data?.heard_input_query);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            loadingIconAudio.classList.add("hidden");
+            mainMic.classList.remove("hidden");
+            // Handle errors
+            document.getElementById("userInput").value = "";
+          });
+      }
+
+      // Function to fetch supported languages and populate the dropdown
+      function fetchSupportedLanguages() {
+        fetch(
+          `${baseUrl}/api/language/languages/?email_id=system%40digitalgreen.org`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+          .then((response) => {
+            if (!response.ok && response.status === 401) {
+              // Handle 401 Unauthorized specifically
+              response.json().then((data) => {
+                showAlertMessage(data.message);
+              });
+              throw new Error("Unauthorized");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!data.error) {
+              const dropdown = document.getElementById("languageDropdown");
+              data.language_data.forEach((lang) => {
+                const option = document.createElement("option");
+                option.value = lang.language_id;
+                option.textContent = lang.language_display_name;
+                dropdown.appendChild(option);
+                option.dataset.bcpCode = lang.language_bcp_code;
+              });
+            } else {
+              console.error("Failed to fetch languages");
+            }
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+
+      // Function to set user preferred language
+      function setUserLanguage() {
+        const dropdown = document.getElementById("languageDropdown");
+        console.log("🚀 ~ setUserLanguage ~ dropdown:", dropdown);
+        // Get the currently selected option
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+
+        // Retrieve the data-bcp-code from the selected option
+        const bcpCode = selectedOption.dataset.bcpCode;
+        console.log("🚀 ~ setUserLanguage ~ bcpCode:", bcpCode);
+        localStorage.setItem("language", bcpCode);
+        const selectedLanguageId = dropdown.value;
+        let userMailId = localStorage.getItem("userEmail");
+
+        fetch(`${baseUrl}/api/language/set_language/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email_id: userMailId,
+            language_id: selectedLanguageId,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok && response.status === 401) {
+              // Handle 401 Unauthorized specifically
+              response.json().then((data) => {
+                showAlertMessage(data.message);
+              });
+              throw new Error("Unauthorized");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!data.error) {
+              alert("Language set successfully");
+            } else {
+              alert("Failed to set language");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            // alert("An error occurred while setting the language");
+          });
+      }
+
+      // Initial fetch of supported languages
+      document.addEventListener("DOMContentLoaded", fetchSupportedLanguages);
+    </script>
+  </body>
+</html>
