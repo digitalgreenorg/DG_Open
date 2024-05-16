@@ -5,7 +5,7 @@ from django_core.config import Config
 from rag_service.openai_service import make_openai_request
 
 
-async def setup_prompt(user_name, context_chunks, rephrased_query, system_prompt=Config.GENERATION_PROMPT):
+async def setup_prompt(user_name, context_chunks, rephrased_query, system_prompt=Config.RESPONSE_GEN_PROMPT):
     prompt_name_1 = user_name if user_name else "a person"
     prompt_name_2 = user_name if user_name else "the person"
     response_prompt = system_prompt.format(
