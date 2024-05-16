@@ -1,5 +1,4 @@
 
-
 # Farmer.chat - an AI powered agricultural assistant by Digital Green
 
 ## Introduction
@@ -158,9 +157,14 @@ Please refer the section on configuration: [Setting up the .env file and .config
  	**Additional configuration**: The following variables can be configured if required:
    	* `WITH_DB_CONFIG=<True/False> based on whether conversations should be logged in Database`
    	* `DJANGO_DEBUG_MODE=<True/False> based on whether Django should be started in debug mode`
-	* `GENERATION_PROMPT=<Multi-line prompt to be used during generation of answer>`
+	* `INTENT_CLASSIFICATION_PROMPT_TEMPLATE=<Multi-line prompt to be used for classification of the user intent>`
+	* `CONVERSATION_PROMPT=<Multi-line prompt to be used to drive the conversation with the user>`
+	* `UNCLEAR_QN_PROMPT=<Multi-line prompt to be used to seek clarity from the user>`
+	* `EXIT_PROMPT=<Multi-line prompt to be used to exit the conversation>`
+	* `OUT_OF_CONTEXT_PROMPT=<Multi-line prompt to be used to convey that the question is out of context>`
 	* `REPHRASE_QUESTION_PROMPT=<Multi-line prompt to be used during question rephrasing>`
 	* `RERANKING_PROMPT_SINGLE_TEMPLATE=<Multi-line prompt to be used during reranking>`
+	* `RESPONSE_GEN_PROMPT=<Multi-line prompt to be used generate response>`
 	* `GPT_3_MODEL=<GPT-3 model version to be used.>`
 	* `GPT_4_MODEL=<GPT-4 model version to be used.>`
 	* `TEMPERATURE=<temperature setting of the LLM.>`
