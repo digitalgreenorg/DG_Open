@@ -10,6 +10,9 @@ credentials = service_account.Credentials.from_service_account_file(Config.GOOGL
 
 
 async def a_translate_to_english(text: str) -> str:
+    """
+    Translate a given text to english.
+    """
     translate_client = translate.Client(credentials=credentials)
     translation = await asyncio.to_thread(
         translate_client.translate,
@@ -21,6 +24,9 @@ async def a_translate_to_english(text: str) -> str:
 
 
 async def a_translate_to(text: str, lang_code: str) -> str:
+    """
+    Translate a given text to specified language.
+    """
     translate_client = translate.Client(credentials=credentials)
     lang_code = lang_code.split("-")[0] if "-" in lang_code else lang_code
     translation = await asyncio.to_thread(
@@ -33,6 +39,9 @@ async def a_translate_to(text: str, lang_code: str) -> str:
 
 
 async def detect_language_and_translate_to_english(input_msg):
+    """
+    Detect the language of specified text and translate it to english.
+    """
     translate_client = translate.Client(credentials=credentials)
     language_detection = await asyncio.to_thread(translate_client.detect_language, input_msg)
     input_language_detected = language_detection["language"]

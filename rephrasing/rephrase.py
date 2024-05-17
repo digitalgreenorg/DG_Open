@@ -33,7 +33,7 @@ async def condense_query_prompt(original_query, chat_history):
 
 async def rephrase_query(original_query, chat_history=None):
     """
-    Rephrase the input message / query with chat history (if available) from openAI and return it.
+    Rephrase and return the input query with chat history (if available) from openAI.
 
     Parameters
     ----------
@@ -93,8 +93,8 @@ async def rephrase_query(original_query, chat_history=None):
 
     rephrase_end_time = datetime.datetime.now()
 
-    print("Original Question : ", original_query)
-    print("Rephrased Question : ", rephrased_query)
+    # print("Original Question : ", original_query)
+    # print("Rephrased Question : ", rephrased_query)
 
     rephrased_response.update(
         {

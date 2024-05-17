@@ -11,6 +11,9 @@ def post_process_rag_pipeline(
     generated_response,
     with_db_config=Config.WITH_DB_CONFIG,
 ):
+    """
+    Save or log the RAG pipeline metrics to DB.
+    """
     data_saved = False
     if with_db_config:
         # insert data logs to db

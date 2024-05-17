@@ -13,6 +13,10 @@ credentials = service_account.Credentials.from_service_account_file(Config.GOOGL
 async def transcribe_and_translate(
     file_name, language_code, encoding_format=speech.RecognitionConfig.AudioEncoding.MP3, sample_rate_hertz=16000
 ):
+    """
+    Generate transcriptions (text) and confidence score for a given audio or voice file
+    in a specified language using an ASR model.
+    """
     speech_client = speech.SpeechClient(credentials=credentials)
     translate_client = translate.Client(credentials=credentials)
 
@@ -30,7 +34,8 @@ async def transcribe_and_translate(
         use_enhanced=True,  # Enable enhanced models
     )
 
-    print("Trying to transcribe in the language: ", language_code)
+    # print(f"Trying to transcribe in the language: {language_code}")
+    logger.info(f"Trying to transcribe in the language: {language_code}")
     response = await asyncio.to_thread(speech_client.recognize, config=config, audio=audio)
 
     # Retrieve the transcriptions
@@ -42,6 +47,7 @@ async def transcribe_and_translate(
     detection_response = await asyncio.to_thread(translate_client.detect_language, transcriptions)
     confidence = detection_response["confidence"]
     detected_language = detection_response["language"]
-    print("Detected language & confidence: ", detected_language, confidence)
+    # print(f"Detected language {detected_language} & Confidence: {confidence}")
+    logger.info(f"Detected language: {detected_language} | Confidence: {confidence}")
 
     return transcriptions, detected_language, confidence

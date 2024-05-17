@@ -2,12 +2,15 @@ import datetime, uuid, logging, json, random
 import asyncio
 
 from django_core.config import Config
-from rag_service.openai_service import make_openai_request, query_qdrant_collection
+from rag_service.openai_service import make_openai_request
 
 logger = logging.getLogger(__name__)
 
 
 def parse_single_rerank_json(json_string: str):
+    """
+    Parse single entry of reranked result.
+    """
     start_index = json_string.find("{")
     end_index = json_string.rfind("}") + 1
 
@@ -16,6 +19,9 @@ def parse_single_rerank_json(json_string: str):
 
 
 async def rerank_query(original_query, rephrased_query, email_id, retrieval_results=[]):
+    """
+    Rerank the retrieved content chunks with the rephrased query from OpenAI.
+    """
     response_map = {}
     doc_map = None
     reranked_chunk_map = None
@@ -54,14 +60,12 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
 
     rerank_start_time = datetime.datetime.now()
 
-    # retrieval_results = query_qdrant_collection(rephrased_query, "coffee", search_type="text", k=12)
-
     docs_for_reranking = []
     doc_map = {}
     if retrieval_results == []:
         return response_map
+
     for data in retrieval_results:
-        # import pdb; pdb.set_trace()
         chunk_id = random.randint(1, 1000)
         doc_map.update(
             {
@@ -89,7 +93,6 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
     sorted_reranked_list = []
     rerank_prompt_list = [
         Config.RERANKING_PROMPT_SINGLE_TEMPLATE.format(
-            # crop=crop,
             json_example=Config.RERANK_SINGLE_JSON_EXAMPLE,
             text=rerank_doc,
             question=rephrased_query,
