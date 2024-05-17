@@ -66,7 +66,7 @@ REST APIs are implemented in Farmer.Chat to retrieve the answers for text and vo
 
  - The Farmer.chat solution is hosted on Digital Green server which is accessible through
    * A Web-based User interface at [https://farmerchat.farmstack.co/opensource-ui/](https://farmerchat.farmstack.co/opensource-ui/)
-   * APIs at [https://farmerchat.farmstack.co/opensource-be/api/chat/](https://farmerchat.farmstack.co/opensource-be/api/chat/)
+   * APIs at [https://farmerchat.farmstack.co/opensource-be/api](https://farmerchat.farmstack.co/opensource-be/api)
      
  - This solution uses the content from the Farmstack instance hosted at [https://datahubtest.farmstack.co/](https://datahubtest.farmstack.co/)
 
@@ -182,8 +182,8 @@ Please refer the section on configuration: [Setting up the .env file and .config
 	 python3 manage.py runserver
 	 ```
 
- 6. Once the development server is started, the APIs are accessible at http://localhost:8000/api/chat/
- 7. Edit the [index.html](index.html) to point to http://localhost:8000/api/chat/ instead of https://farmerchat.farmstack.co/opensource-be/api/chat/ and the index.html can be used as explained in section [above](#how-to-use-the-web-based-interface).
+ 6. Once the development server is started, the APIs are accessible at http://localhost:8000/api
+ 7. Edit the [index.html](index.html) to point the baseUrl to http://localhost:8000 instead of https://farmerchat.farmstack.co/opensource-be and the index.html can be used as explained in section [above](#how-to-use-the-web-based-interface).
 
 ## Database setup steps (required only if Database config is enabled)
 
