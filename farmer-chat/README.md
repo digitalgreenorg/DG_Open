@@ -172,8 +172,8 @@ Please refer the section on configuration: [Setting up the .env file and .config
      
 6. Run the below commands in sequence (to create and activate the virtual environment and install required dependencies)
 	```bash
-	 python3 -m venv myenv
-	 source myenv/bin/activate
+	 python3 -m venv .myenv
+	 source .myenv/bin/activate
 	 pip install -r requirements.txt
 	 ```
  
