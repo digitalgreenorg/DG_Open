@@ -12,7 +12,7 @@
     }
   ],
   "paths": {
-    "/chat/get_answer_for_text_query": {
+    "/chat/get_answer_for_text_query/": {
       "post": {
         "summary": "Get answer for text query",
         "requestBody": {
@@ -154,7 +154,7 @@
         }
       }
     },
-    "/chat/synthesise_audio": {
+    "/chat/synthesise_audio/": {
       "post": {
         "summary": "Synthesise audio from text",
         "requestBody": {
@@ -264,7 +264,7 @@
         }
       }
     },
-    "/chat/transcribe_audio": {
+    "/chat/transcribe_audio/": {
       "post": {
         "summary": "Transcribe audio to text",
         "requestBody": {
@@ -410,7 +410,7 @@
         }
       }
     },
-    "/chat/get_answer_by_voice_query": {
+    "/chat/get_answer_by_voice_query/": {
       "post": {
         "summary": "Get answer by processing voice query",
         "requestBody": {
@@ -583,7 +583,7 @@
         }
       }
     },
-    "/language/languages": {
+    "/language/languages/": {
       "get": {
         "summary": "list supported languages",
         "parameters": [
@@ -683,7 +683,7 @@
         }
       }
     },
-    "/language/set_language": {
+    "/language/set_language/": {
       "post": {
         "summary": "Save or set the client or user preferred language",
         "requestBody": {
