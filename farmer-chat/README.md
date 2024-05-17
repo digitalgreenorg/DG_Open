@@ -200,6 +200,8 @@ Please refer the section on configuration: [Setting up the .env file and .config
 	```bash
 	psql -h hostname -p port -U username -d database_name -f multilingual_text_data.sql
 	```
+## Code documentation
+Please refer to the code documentation [here](https://farmer-chat.readthedocs.io/en/latest/index.html)
 
 ## Limitations
 1. The retrieved answers may be incomplete if the asnwer to queries does not exist in a running text (paragraph mode) in the content documents. For example, the answer lies in tables, images, table of contents, embedded links etc.
