@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 def content_retrieval(
     original_query, email, domain_url=Config.CONTENT_DOMAIN_URL, api_endpoint=Config.CONTENT_RETRIEVAL_ENDPOINT
 ):
+    """
+    Retrieve content chunks relevant to the user query from content retrieval site.
+    """
     response_map = {}
     retrieval_start = None
     retrieval_end = None
@@ -30,6 +33,7 @@ def content_retrieval(
             request_type="POST",
             total_retry=3,
         )
+        # retrieved_content = response if len(response) >= 1 else None
         retrieved_content = json.loads(response.text) if response and response.status_code == 200 else None
 
     except Exception as error:

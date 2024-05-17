@@ -6,10 +6,12 @@ from rag_service.openai_service import make_openai_request
 
 
 async def setup_prompt(user_name, context_chunks, rephrased_query, system_prompt=Config.RESPONSE_GEN_PROMPT):
+    """
+    Setup generation response prompt for a rephrased user query with retrieved chunks.
+    """
     prompt_name_1 = user_name if user_name else "a person"
     prompt_name_2 = user_name if user_name else "the person"
     response_prompt = system_prompt.format(
-        # crop=crop,
         name_1=prompt_name_1,
         # name_2=prompt_name_2,
         context=context_chunks,
@@ -20,6 +22,9 @@ async def setup_prompt(user_name, context_chunks, rephrased_query, system_prompt
 
 
 async def generate_query_response(original_query, user_name, context_chunks, rephrased_query):
+    """
+    Generate final response for a rephrased user query with the retrieved chunks.
+    """
     response_map = {}
     llm_response = None
     response_gen_start = None
@@ -49,7 +54,8 @@ async def generate_query_response(original_query, user_name, context_chunks, rep
 
     response_prompt = await setup_prompt(user_name, context_chunks, rephrased_query)
 
-    print(f"\n ######## FINAL PROMPT BEGINS ########\n{response_prompt} ######## FINAL PROMPT END ########\n")
+    # print(f"\n ######## FINAL PROMPT BEGINS ########\n{response_prompt} ######## FINAL PROMPT END ########\n")
+    # logger.info(f"\n ######## FINAL PROMPT BEGINS ########\n{response_prompt} ######## FINAL PROMPT END ########\n")
     response_gen_start = datetime.datetime.now()
     generated_response, response_gen_exception, response_gen_retries = await make_openai_request(response_prompt)
     response_gen_end = datetime.datetime.now()

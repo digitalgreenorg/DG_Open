@@ -48,3 +48,14 @@ class Constants:
         "could_not_understand_message": "Apologize! I could not understand. Please try again.",
         "unable_to_transcribe_the_voice_input_query": "Unfortunately unable to transcribe the above voice input query.",
     }
+
+    # split the FollowUpQuestions based on the following list
+    SPLIT_STRING_LIST_FOR_FOLLOW_UP_QUESTIONS = [
+        "Example Questions:\n",
+        "Here are a few questions that may help:",
+        "Here are a few follow-up questions that may help:",
+        "**Example Questions:**",
+        "As follow-up questions, users can ask:",
+        "As follow-up questions, you can ask:",
+        "As follow-up questions, here are some examples based on the context provided:",
+    ]

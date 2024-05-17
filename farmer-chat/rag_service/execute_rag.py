@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 def execute_rag_pipeline(
     original_query, input_language_detected, email_id, user_name=None, message_id=None, chat_history=None
 ):
+    """
+    Execute RAG pipeline to process rephrasing, reranking and generating response
+    for the given query based on the available content.
+    """
     generated_final_response = None
     response_map = {"message_id": message_id}
     message_data_to_insert_or_update = {"message_id": message_id}

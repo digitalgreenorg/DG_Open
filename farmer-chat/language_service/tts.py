@@ -14,6 +14,10 @@ credentials = service_account.Credentials.from_service_account_file(Config.GOOGL
 
 
 async def synthesize_speech_azure(text_to_synthesize, language_code, aiohttp_session):
+    """
+    Synthesise speech using Azure TTS model.
+    `Azure TTS Docs <https://learn.microsoft.com/en-us/azure/ai-services/speech-service/>`_
+    """
     audio_content = None
 
     # use Azure for Speech synthesis
@@ -59,6 +63,10 @@ async def synthesize_speech(
     audio_encoding_format=texttospeech.AudioEncoding.OGG_OPUS,
     sample_rate_hertz=48000,
 ) -> str:
+    """
+    Synthesise speech using Google TTS. Please refer the below docs.
+    `Google TTS Docs <https://cloud.google.com/text-to-speech/docs/>`_
+    """
     id_string = uuid.uuid4() if not id_string else id_string
     file_name = f"response_{id_string}.{Constants.OGG}"
     input_text = clean_text(input_text)

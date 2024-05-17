@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 def authenticate_user_based_on_email(email_id):
     """
-    Authenticate the user on content retrieval site
+    Authenticate the user via content authenticate site
     """
     authenticated_user = None
     try:
@@ -43,6 +43,7 @@ def authenticate_user_based_on_email(email_id):
         response = send_request(
             authentication_url, data={"email": email_id}, content_type="JSON", request_type="POST", total_retry=3
         )
+        # authenticated_user = response if len(response) >= 1 else None
         authenticated_user = json.loads(response.text) if response and response.status_code == 200 else None
 
     except Exception as error:
@@ -58,6 +59,9 @@ def preprocess_user_data(
     with_db_config=Config.WITH_DB_CONFIG,
     message_input_type=Constants.MESSAGE_INPUT_TYPE_TEXT,
 ):
+    """
+    Process user profile fetched from content authenticate site by saving or updating.
+    """
     user_name, message_id, message_obj, user_id = None, None, None, None
     user_data, message_data_to_insert_or_update = {}, {}
 
@@ -100,6 +104,10 @@ def preprocess_user_data(
 
 
 def process_query(original_query, email_id, authenticated_user={}):
+    """
+    Pre-process user profile and user query, execute RAG pipeline with intent classification if the
+    user query is relevant to the content, and finally return the generated response for the same.
+    """
     message_obj, chat_history = None, None
     response_map, message_data_to_insert_or_update, message_data_update_post_rag_pipeline = {}, {}, {}
 
@@ -180,6 +188,9 @@ def process_input_audio_to_base64(
     language_code=Constants.LANGUAGE_SHORT_CODE_NATIVE,
     with_db_config=Config.WITH_DB_CONFIG,
 ):
+    """
+    Synthesise input text or user query to audio in specified language, and encode to base64 string.
+    """
     input_audio, input_audio_file = None, None
 
     try:
@@ -198,6 +209,9 @@ def process_input_audio_to_base64(
 
 
 def process_output_audio(original_text, message_id=None, with_db_config=Config.WITH_DB_CONFIG):
+    """
+    Synthesise output text or generated response to audio in english language, and encode to base64 string.
+    """
     response_audio, response_audio_file, message_obj = None, None, None
     message_data_to_insert_or_update = {}
 
@@ -231,8 +245,11 @@ def process_output_audio(original_text, message_id=None, with_db_config=Config.W
 
 
 def handle_input_query(input_query):
+    """
+    Return a binary file by decoding input query (as base64 string).
+    """
     # if not Uploaded file, convert the base64 file string to a binary file
-    file_name = None
+    file_name, input_query_file = None, None
 
     input_query_file = decode_base64_to_binary(input_query)
 
@@ -254,6 +271,10 @@ def process_transcriptions(
     message_input_type=Constants.MESSAGE_INPUT_TYPE_VOICE,
     with_db_config=Config.WITH_DB_CONFIG,
 ):
+    """
+    Process generation of transcriptions (text) for a given audio or voice file
+    in a specified language if any or in user preferred language.
+    """
     message_id, message_obj = None, None
     response_map, message_data_to_insert_or_update, language_dict = {}, {}, {}
 

@@ -1,4 +1,4 @@
-import logging, json, certifi, re, uuid, base64, regex
+import logging, json, certifi, re, uuid, base64, regex, binascii
 from peewee import DoesNotExist
 from requests import Request, Session
 from requests.adapters import HTTPAdapter
@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 def send_request(
     url, headers={}, data=None, content_type="form-data", request_type="GET", total_retry=10, params=None
 ):
+    """
+    Generic helper function to send requests to a specified URL with the relevant HTTP method,
+    query params, request body, content negotiation and number of retries.
+    """
     response = None
     try:
         if content_type == "JSON":
@@ -41,14 +45,10 @@ def send_request(
             verify=certifi.where(),
             # verify=False,
         )
-
-        print(
-            {
-                "function": "send_request",
-                "response_status": response.status_code,
-                "url": url,
-            }
-        )
+        logger.info(f"URL: {url} | Response Status Code: {response.status_code}")
+        # json_response = json.loads(response.text) if response and response.status_code == 200 else {}
+        # json_response.update({"status_code": response.status_code})
+        # logger.info(f"Response: {json_response}")
 
     except Exception as error:
         logger.error(error, exc_info=True)
@@ -57,6 +57,9 @@ def send_request(
 
 
 def get_or_create_latest_conversation(conversation_data: dict) -> Conversation:
+    """
+    Fetch the latest conversation instance if available or create a new conversation.
+    """
     conversation = None
     user_id = conversation_data.get("user_id", None)
     try:
@@ -80,12 +83,11 @@ def get_or_create_latest_conversation(conversation_data: dict) -> Conversation:
 
 
 def get_user_chat_history(user_id, window=Config.CHAT_HISTORY_WINDOW):
+    """
+    Fetch user chat history by querying the previous messages associated with the user.
+    """
     chat_history = None
-    if celery.db_conn:
-        db_to_connect = celery.db_conn
-    else:
-        db_to_connect = db_conn
-    with db_to_connect:
+    with db_conn:
         conversation = get_or_create_latest_conversation({"user_id": user_id})
         messages = (
             Messages.select()
@@ -105,14 +107,17 @@ def get_user_chat_history(user_id, window=Config.CHAT_HISTORY_WINDOW):
             )
         # history.append((message.translated_message, message.message_response))
 
-    # logger.info(f"User chat history :\n {chat_history}")
     # print(f"\n ######## USER CHAT HISTORY BEGINS ########\n{chat_history} ######## USER CHAT HISTORY END ########\n")
+    # logger.info(f"User chat history :\n {chat_history}")
     return chat_history
 
 
 def insert_message_record(
     message_data: dict,
 ) -> Messages:
+    """
+    create or insert new message record.
+    """
     message_inserted, message_id, conversation_id = None, None, None
     try:
         conversation_id = message_data.get("conversation_id")
@@ -128,11 +133,17 @@ def insert_message_record(
 def get_message_object_by_id(
     message_id,
 ) -> Messages:
+    """
+    Fetch Messages instance by message ID
+    """
     message = get_record_by_field(Messages, "id", message_id)
     return message
 
 
 def get_or_create_user_by_email(user_data: dict) -> User:
+    """
+    Fetch an User instance by email ID if available or create one.
+    """
     user_obj = None
     email_id = user_data.get("email", None)
     try:
@@ -151,6 +162,9 @@ def get_or_create_user_by_email(user_data: dict) -> User:
 
 
 def create_or_update_user_by_email(user_data: dict) -> User:
+    """
+    Save the user profile data if it does not exist or update it with latest profile data.
+    """
     user_obj = None
     email_id = user_data.get("email", None)
     try:
@@ -160,7 +174,6 @@ def create_or_update_user_by_email(user_data: dict) -> User:
             logger.info(f"New User created for the email_id:{email_id}")
         else:
             user_obj = update_record(User, user_obj.id, user_data)
-            logger.info(f"Updated User with email_id:{email_id}")
 
     except Exception as e:
         logger.error(e, exc_info=True)
@@ -169,24 +182,25 @@ def create_or_update_user_by_email(user_data: dict) -> User:
 
 
 def create_follow_up_questions(data) -> FollowUpQuestion:
+    """
+    Save multiple instances of Follow-up question data.
+    """
     # def insert_many_objects(data, ModelName):
     # with database_config.db:
     inserted_objs = None
-    if celery.db_conn:
-        db_to_connect = celery.db_conn
-    else:
-        db_to_connect = db_conn
 
-    with db_to_connect:
+    with db_conn:
         inserted_objs = FollowUpQuestion.insert_many(data).execute()
 
     return inserted_objs
 
 
-#### TBD: Move DB queries outside this module
 async def postprocess_and_translate_query_response(
     original_response, input_language, message_id, with_db_config=Config.WITH_DB_CONFIG
 ):
+    """
+    Post-process the generated response with translation to relevant language and split the follow-up questions.
+    """
     final_response = ""
     questions = ""
     resource_message_text = ""
@@ -197,15 +211,8 @@ async def postprocess_and_translate_query_response(
 
     try:
         output_language = input_language.split("-")[0] if "-" in input_language else input_language
-        split_string_list = [
-            "Example Questions:\n",
-            "Here are a few questions that may help:",
-            "Here are a few follow-up questions that may help:",
-            "**Example Questions:**",
-            "As follow-up questions, users can ask:",
-            "As follow-up questions, you can ask:",
-            "As follow-up questions, here are some examples based on the context provided:",
-        ]
+        split_string_list = Constants.SPLIT_STRING_LIST_FOR_FOLLOW_UP_QUESTIONS
+
         index = -1
         if original_response:
             for substring in split_string_list:
@@ -288,12 +295,17 @@ async def postprocess_and_translate_query_response(
 
 
 def save_message_obj(message_id, message_data_to_insert_or_update):
-    # with db_conn:
-    # message_obj.save()
+    """
+    Update a Message instance.
+    """
     update_record(Messages, message_id, message_data_to_insert_or_update)
 
 
 def clean_text(text):
+    """
+    Remove markup tags, hyperlinks, images and other irrelevant special characters from a given text,
+    which will be further sent for audio synthesis.
+    """
     # Remove HTML tags
     text = re.sub(r"<[^>]+>", "", text)
 
@@ -311,12 +323,16 @@ def clean_text(text):
 
 
 def encode_binary_to_base64(audio_file):
+    """
+    Encode binary audio file to base64 string.
+    """
     base64_string = None
     try:
         with open(audio_file, "rb") as audio_file_buffer:
             audio_binary_data = audio_file_buffer.read()
             base64_string = base64.b64encode(audio_binary_data).decode()
 
+        base64_string = base64_string if len(base64_string) >= 1 else None
     except Exception as error:
         logger.error(error, exc_info=True)
 
@@ -324,11 +340,14 @@ def encode_binary_to_base64(audio_file):
 
 
 def decode_base64_to_binary(base64_string):
+    """
+    Decode base64 string to binary file.
+    """
     binary_file = None
     try:
         binary_file = base64.b64decode(base64_string)
-    except Exception as error:
-        logger.error(error, exc_info=True)
+    except binascii.Error:
+        logger.warning("Error in decoding the base64 string")
 
     return binary_file
 
@@ -366,8 +385,10 @@ def set_user_preferred_language(user_id, language_id):
 
 
 def format_multilingual_text_code(string):
-    # format MultilingualText instance's text_code to contain only underscores
-    # ex: phrase_in_english_en
+    """
+    Format a text by removing whitespaces, using "_" as a delimiter and return in lower case.
+    ex: phrase_in_english_en
+    """
     replace_spaces = re.sub("\s", "_", str(string).lower())
     final_string = re.sub("[^a-zA-Z0-9 \n\.]", "_", replace_spaces)
     return final_string
@@ -378,6 +399,9 @@ def fetch_multilingual_texts_for_static_text_messages(
     language_code=Constants.LANGUAGE_SHORT_CODE_NATIVE,
     with_db_config=Config.WITH_DB_CONFIG,
 ):
+    """
+    Return a list MultilingualTexts for a given list of static texts in specified language.
+    """
     multilingual_text_list, multilingual_text_query_list = [], []
 
     try:
@@ -416,6 +440,9 @@ def fetch_multilingual_texts_for_static_text_messages(
 def fetch_corresponding_multilingual_text(
     corresponding_text, text_codes_list_with_multilingual_texts, language_code=Constants.LANGUAGE_SHORT_CODE_NATIVE
 ):
+    """
+    Return corresponding static text from a list of MultilingualTexts in specified language.
+    """
     matched_text = None
     for item in text_codes_list_with_multilingual_texts:
         if corresponding_text in item:

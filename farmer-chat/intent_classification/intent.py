@@ -4,36 +4,56 @@ from intent_classification.constants import IntentConstants
 
 
 async def classify_intent(qn):
+    """
+    Classify the query or question intent into any of the classification to which it falls under.
+    """
     prompt = Config.INTENT_CLASSIFICATION_PROMPT_TEMPLATE.format(input=qn)
     intent_response, ex, retries = await make_openai_request(prompt, model=Config.GPT_4_MODEL)
     return intent_response.choices[0].message.content if intent_response else IntentConstants.USER_INTENT_FARMING
 
 
 async def generate_convo_response(qn, name):
+    """
+    Classify the query or question intent as a general conversation.
+    """
     prompt = Config.CONVERSATION_PROMPT.format(name=name, input=qn)
     convo_response, convo_ex, convo_retries = await make_openai_request(prompt)
     return convo_response.choices[0].message.content
 
 
 async def generate_unclear_qn_response(qn, name):
+    """
+    Classify the query or question intent as an unclear question.
+    """
     prompt = Config.UNCLEAR_QN_PROMPT.format(name=name, input=qn)
     unclear_qn_response, unclear_qn_ex, unclear_qn_etries = await make_openai_request(prompt)
     return unclear_qn_response.choices[0].message.content
 
 
 async def generate_exit_response(qn, name):
+    """
+    Classify the query or question intent as an exit conversation.
+    """
     prompt = Config.EXIT_PROMPT.format(name=name, input=qn)
     exit_response, exit_ex, exit_retries = await make_openai_request(prompt)
     return exit_response.choices[0].message.content
 
 
 async def generate_out_of_context_response(qn, name):
+    """
+    Classify the query or question intent as an out of context question.
+    """
     prompt = Config.OUT_OF_CONTEXT_PROMPT.format(name=name, input=qn)
     out_of_context_response, out_of_context_ex, out_of_context_retries = await make_openai_request(prompt)
     return out_of_context_response.choices[0].message.content
 
 
 async def process_user_intent(input_msg, user_name):
+    """
+    Intent classification of the user query or message to recognise the intention of the user. If the user's
+    query intent falls under any of the categories such as greetings, unclear queries, exiting the conversation,
+    out of context, or to get an answer / response within the context of the available content.
+    """
     response = None
     intent = None
     proceed_to_rag = True

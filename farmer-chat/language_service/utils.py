@@ -7,25 +7,28 @@ from database.db_operations import get_record_by_field
 logger = logging.getLogger(__name__)
 
 
-def get_language_by_code(code: str) -> Language:
+def get_language_by_code(language_code: str) -> Language:
+    """
+    Query Language instance by language code.
+    """
     language = []
     with db_conn:
         try:
             language_query = Language.select(
                 (Language.id).alias("language_id"), Language.name, Language.code, Language.latn_code, Language.bcp_code
-            ).where(Language.is_deleted == False, Language.id == language_id)
+            ).where(Language.is_deleted == False, Language.code == language_code)
 
             if language_query.count() >= 1:
                 language = list(language_query.dicts().execute())[0]
 
         except Exception as error:
-            logger.info(f"Exception, Language by code {code} does not exists")
+            logger.warning(f"Language by code {code} does not exists")
     return language
 
 
 def get_all_languages() -> list:
     """
-    Query the list of all active languages
+    Query the list of all active languages.
     """
     language_list = []
 
@@ -51,7 +54,7 @@ def get_all_languages() -> list:
 
 def get_language_by_id(language_id):
     """
-    Query a specific language by the given language ID
+    Query a specific language by the given language ID.
     """
     language = {}
     try:

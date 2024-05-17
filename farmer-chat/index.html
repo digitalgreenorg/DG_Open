@@ -725,7 +725,7 @@
       }
 
       // Function to fetch supported languages and populate the dropdown
-      function fetchSupportedLanguages() {
+      function fetchSupportedLanguages(status) {
         let userMailId = localStorage.getItem("userEmail");
         if (!userMailId) {
           return;
@@ -754,7 +754,7 @@
           })
           .then((data) => {
             hideWarning();
-            alert("Email saved!");
+            if (status == true) alert("Email saved!");
             if (!data.error) {
               const dropdown = document.getElementById("languageDropdown");
               // Clear the dropdown
