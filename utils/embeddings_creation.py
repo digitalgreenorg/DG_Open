@@ -1,32 +1,29 @@
 # from langchain.document_loaders import PdfLoader
 import argparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import concurrent.futures
-import pytube
-
 import csv
 import json
 import logging
 import os
 import re
 import subprocess
+import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from urllib.parse import quote_plus
 from uuid import UUID
-from docx import Document
 
-import os
-import requests
-import tempfile
-from contextlib import contextmanager
 import certifi
 import openai
+import pytube
 import pytz
 import requests
+from bs4 import BeautifulSoup
 from django.db import models
 from django.db.models import OuterRef, Subquery
 from django.db.models.functions import Cast
-from bs4 import BeautifulSoup
+from docx import Document
 
 # from langchain.vectorstores import Chroma
 from dotenv import load_dotenv
@@ -47,8 +44,7 @@ from langchain.text_splitter import (
     CharacterTextSplitter,
     RecursiveCharacterTextSplitter,
 )
-from langchain.vectorstores.pgvector import DistanceStrategy, PGVector
-
+from langchain.vectorstores.pgvector import DistanceStrategy
 from pgvector.django import CosineDistance, L2Distance
 from psycopg.conninfo import make_conninfo
 from reportlab.lib import colors
@@ -62,16 +58,34 @@ from requests import Request, Session
 from requests.adapters import HTTPAdapter
 from sqlalchemy.dialects.postgresql import dialect
 from urllib3.util import Retry
-from celery import shared_task
 
+from celery import shared_task
 from core import settings
 from core.constants import Constants
-from datahub.models import LangchainPgCollection, LangchainPgEmbedding, ResourceFile
+from datahub.models import LangchainPgCollection, LangchainPgEmbedding, OutputParser, ResourceFile
+from utils.chain_builder import ChainBuilder
+from langchain.prompts import PromptTemplate
+from utils.pgvector import PGVector
+from langchain.retrievers.merger_retriever import MergerRetriever
+
+from langchain.retrievers import (
+ContextualCompressionRetriever,
+MergerRetriever,
+)
+from langchain.retrievers.document_compressors import DocumentCompressorPipeline
+
+from langchain_community.document_transformers import (
+    EmbeddingsClusteringFilter,
+    EmbeddingsRedundantFilter,
+)
+from langchain_core.output_parsers import JsonOutputParser
+
+
 # from openai import OpenAI
 LOGGING = logging.getLogger(__name__)
 
 load_dotenv()
-open_ai=openai.Audio()
+# open_ai=openai.Audio()
 os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
 
 openai.api_key = settings.OPENAI_API_KEY
@@ -88,6 +102,58 @@ retriever = ''
 
 # Construct the connection string
 connectionString = f"postgresql://{encoded_user}:{encoded_password}@{db_settings['HOST']}:{db_settings['PORT']}/{db_settings['NAME']}"
+
+
+def load_vector_db(resource_id, filters):
+    embeddings = OpenAIEmbeddings(model=embedding_model)
+
+    LOGGING.info("Looking into resource: {resource_id} embeddings")
+    collection_ids = LangchainPgCollection.objects.filter(
+        name__in=Subquery(
+            ResourceFile.objects.filter(resource=resource_id)
+            .annotate(string_id=Cast('id', output_field=models.CharField()))
+            .values('string_id')
+        )
+    ).values_list('uuid', flat=True)
+    vector_db = PGVector(
+            collection_name="ALL",
+            connection_string=connectionString,
+            embedding_function=embeddings,
+        )
+    retriever = vector_db.as_retriever(search_args={'k':5},search_type="similarity_score_threshold", search_kwargs={"filter": filters, "score_threshold": 0.8})
+    return retriever, vector_db
+    embeddings = OpenAIEmbeddings()
+
+    def setup_retriever(collection_id):
+        vector_db = PGVector(
+            collection_name=str(collection_id),
+            connection_string=connectionString,
+            embedding_function=embeddings,
+        )
+        retriever = vector_db.as_retriever(search_type="similarity", search_args={'k':5})
+        return retriever
+    retrievals=[]
+    # Use ThreadPoolExecutor to run setup_retriever concurrently
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        # Create a future for each setup_retriever call
+        future_to_collection_id = {executor.submit(setup_retriever, collection_id): collection_id for collection_id in collection_ids}
+        
+        for future in as_completed(future_to_collection_id):
+            collection_id = future_to_collection_id[future]
+            try:
+                retriever = future.result()  # Retrieve the result from the future
+                retrievals.append(retriever)  # Add the successfully created retriever to the list
+            except Exception as exc:
+                LOGGING.error(f'{collection_id} generated an exception: {exc}')
+  
+    merge_retriever = MergerRetriever(retrievers = retrievals)
+    filter = EmbeddingsRedundantFilter(embeddings=embeddings)
+    pipeline = DocumentCompressorPipeline(transformers=[filter])
+    compression_retriever = ContextualCompressionRetriever(
+                            base_compressor=pipeline, base_retriever=merge_retriever)
+    a = compression_retriever.similarity_search_with_score("Tell me about wheat varities")
+    return compression_retriever
+
 
 def transcribe_audio(audio_bytes, language="en-US"):
     try:
@@ -129,15 +195,22 @@ class VectorBuilder:
     def get_embeddings(self, embeddings, docs, collection_name, connection_string, resource):
         for document in docs:
             document.metadata["url"] = resource.get("url")
+            document.metadata["type"] = resource.get("type")
+            document.metadata["state"] = resource.get("state")
+            document.metadata["crop"] = resource.get("crop")
+            document.metadata["resource_file_id"] = resource.get("id")
+
         retriever = PGVector.from_documents(
         embedding=embeddings,
         documents=docs,
-        collection_name=collection_name,
+        collection_name="ALL",
         connection_string=connection_string,
     )
 
     def download_file(self, file_url, local_file_path):
         try:
+            import pdb; pdb.set_trace()
+
             with open(local_file_path, 'w'):
                 pass 
             if re.match(r"(https?://|www\.)", file_url) is None:
@@ -221,7 +294,6 @@ class VectorBuilder:
             LOGGING.info(f"Audio file not available for url: {url}")
             video = pytube.YouTube(url)
             video_stream = video.streams.filter(only_audio=True).first()
-            # import pdb; pdb.set_trace()
 
             video_stream.download(filename=output_audio_file_mp3)
             LOGGING.info(f"Audio file downloaded for url: {url}")
@@ -250,6 +322,7 @@ class VectorBuilder:
                     if type == 'youtube':
                         summary = self.generate_transcriptions_summary(url)
                         self.build_pdf(summary, temp_pdf_path)
+                        ResourceFile.objects.filter(id=id).update(transcription=summary)
                         loader = PyMuPDFLoader(temp_pdf_path)  # Assuming PyMuPDFLoader is defined elsewhere
                     elif type == 'pdf':
                         self.download_file(url, temp_pdf_path)
@@ -269,6 +342,7 @@ class VectorBuilder:
                 LOGGING.error(f"Unsupported input type: {type}")
                 return f"Unsupported input type: {type}", "failed"
         except Exception as e:
+
             LOGGING.error(f"Faild lo load the documents: {str(e)}")
             return str(e), "failed"
 
@@ -364,8 +438,9 @@ class Retrival:
         embedding = response['data'][0]['embedding']
         return embedding
 
-    def find_similar_chunks(self, input_embedding, resource_id,  top_n=5):
+    def find_similar_chunks(self, input_embedding, resource_id,  top_n=5, filters={}):
         # Assuming you have a similarity function or custom SQL to handle vector comparison
+
         if resource_id:
             LOGGING.info("Looking into resource: {resource_id} embeddings")
             collection_ids = LangchainPgCollection.objects.filter(
@@ -378,22 +453,22 @@ class Retrival:
             # Use these IDs to filter LangchainPgEmbedding objects
             similar_chunks = LangchainPgEmbedding.objects.annotate(
                 similarity=CosineDistance("embedding", input_embedding)
-            ).order_by("similarity").filter(similarity__lt=0.17, collection_id__in=collection_ids).defer("cmetadata").all()[:top_n]
+            ).order_by("similarity").filter(similarity__lt=0.17, collection_id__in=collection_ids, **filters).defer("cmetadata").all()[:top_n]
             return similar_chunks
         else:
             LOGGING.info("Looking into all embeddings")
             similar_chunks = LangchainPgEmbedding.objects.annotate(
                 similarity=CosineDistance("embedding", input_embedding)
-            ).order_by("similarity").filter(similarity__lt=0.17).defer('cmetadata').all()[:top_n]
+            ).order_by("similarity").filter(similarity__lt=0.17,  **filters).defer('cmetadata').all()[:top_n]
             return similar_chunks
 
     def format_prompt(self, user_name, context_chunks, user_input, chat_history):
-        if context_chunks:
-            LOGGING.info("chunks availabe")
-            return Constants.SYSTEM_MESSAGE.format(name_1=user_name, input=user_input, context=context_chunks, chat_history=chat_history)
-        else:
-            LOGGING.info("chunks not availabe")
-            return Constants.NO_CUNKS_SYSTEM_MESSAGE.format(name_1=user_name, input=user_input)
+        # if context_chunks:
+        #     LOGGING.info("chunks availabe")
+        return Constants.LATEST_PROMPT.format(name_1=user_name, input=user_input, context=context_chunks, chat_history=chat_history)
+        # else:
+        #     LOGGING.info("chunks not availabe")
+        #     return Constants.NO_CUNKS_SYSTEM_MESSAGE.format(name_1=user_name, input=user_input)
 
     def condensed_question_prompt(self, chat_history, current_question):
         # greetings = ["hello", "hi", "greetings", "hey"]
@@ -494,4 +569,104 @@ class VectorDBBuilder:
         except Exception as e:
             LOGGING.error(f"Error while generating response for query: {text}: Error {e}", exc_info=True)
             return str(e)
-   
+    
+    def get_input_embeddings_using_chain(text, user_name=None, resource_id=None, chat_history=None, filters={}):
+        retrival = Retrival()
+        parser = JsonOutputParser(pydantic_object=OutputParser)
+
+        prompt_template = PromptTemplate(input_variables=["name_1", "context",  "input"],
+            template=Constants.LATEST_PROMPT,
+            partial_variables={"format_instructions": parser.get_format_instructions()},
+            )
+        # complete_history, history_question = retrival.chat_history_formated(chat_history)
+        complete_history=[] 
+        if chat_history:
+            complete_history.append((chat_history.condensed_question, chat_history.query_response))
+        retriver, vector_db = load_vector_db(resource_id, filters)
+        qa, retriver = ChainBuilder.create_qa_chain(
+                vector_db = retriver,
+                retriever_count=5,
+                model_name=Constants.GPT_3_5_TURBO,
+                temperature=Constants.TEMPERATURE,
+                max_tokens=Constants.MAX_TOKENS,
+                chain_type="stuff",
+                prompt_template=prompt_template,
+            )
+        import asyncio
+
+        def sync_async(coroutine):
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:  # No running event loop
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(coroutine)
+                loop.close()
+            else:
+                result = asyncio.run_coroutine_threadsafe(coroutine, loop).result()
+            return result
+        task = qa.ainvoke(
+                {
+                    "question": text,
+                    "chat_history": complete_history,
+                    "input": text,
+                    "name_1": user_name,
+                }
+            )
+        result = sync_async(task)
+        filters["type"] = "youtube"
+        response = vector_db.similarity_search_with_score(result["generated_question"], filter=filters)
+        print(result["answer"])
+        print(type(result["answer"]))
+
+        answer =  json.loads(result["answer"]) if isinstance(result["answer"], str) else result["answer"] 
+        youtube_url = ''
+        if response and response[0][1] <= 0.17:
+            youtube_url = response[0][0].metadata.get("url", '')
+        metadata = {
+            "youtube_url": youtube_url,
+            "query_response": answer.get("response"),
+            "condensed_question": result.get("generated_question"),
+            "follow_up_questions": answer.get("follw_up_questions")  # Note: Check the spelling of "follow_up_questions" in your source.
+        }
+
+        return answer.get("response"), result["source_documents"], result["generated_question"], metadata
+
+    def get_input_embeddings_test(text, user_name=None, resource_id=None, chat_history=None, filters={}):
+        text=text.replace("\n", " ") # type: ignore
+        documents, chunks = "", []
+        retrival = Retrival()
+        complete_history, history_question = retrival.chat_history_formated(chat_history)
+        try:
+            text, status = retrival.condensed_question_prompt(history_question, text)
+            if status:
+                text, tokens_uasage = retrival.generate_response(text)
+            embedding = retrival.genrate_embeddings_from_text(text)
+            chunks = retrival.find_similar_chunks(embedding, resource_id, filters)
+            documents =  " ".join([row.document for row in chunks])
+            LOGGING.info(f"Similarity score for the query: {text}. Score: {' '.join([str(row.similarity) for row in chunks])} ")
+            formatted_message = retrival.format_prompt(user_name, documents, text, complete_history)
+            response, tokens_uasage =retrival.generate_response(formatted_message)
+            return response, chunks, text, tokens_uasage
+        except openai.error.InvalidRequestError as e:
+            try:
+                LOGGING.error(f"Error while generating response for query: {text}: Error {e}", exc_info=True)
+                LOGGING.info(f"Retrying without chat history")
+                formatted_message = retrival.format_prompt(user_name, documents, text, "")
+                response, tokens_uasage = retrival.generate_response(formatted_message)
+                return response, chunks, text, tokens_uasage
+            except openai.error.InvalidRequestError as e:
+                for attempt in range(3, 1, -1):  # Try with 3, then 2 chunks if errors continue
+                    try:
+                        documents = " ".join([row.document for row in chunks[:attempt]])
+                        formatted_message = retrival.format_prompt(user_name, documents, text, "")
+                        response,tokens_uasage = retrival.generate_response(formatted_message)
+                        return response, chunks, text, tokens_uasage
+                    except openai.error.InvalidRequestError as e:
+                        LOGGING.info(f"Retrying with {attempt-1} chunks due to error: {e}")
+                        continue  # Continue to the next attempt with fewer chunks
+
+        except Exception as e:
+            LOGGING.error(f"Error while generating response for query: {text}: Error {e}", exc_info=True)
+            return str(e)
+    

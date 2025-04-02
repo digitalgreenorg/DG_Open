@@ -68,7 +68,9 @@ INSTALLED_APPS = [
     "participant",
     "microsite",
     "connectors",
-    "django_apscheduler"
+    "django_apscheduler",
+    "ai"
+
 ]
 # Use nose to run all tests
 TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
@@ -113,6 +115,9 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+# Password validation
+# https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
+
 
 DATABASES = {
     "default": {
@@ -126,10 +131,16 @@ DATABASES = {
             "client_encoding": "UTF8",
         },
     },
+    "vector_db":{
+        "NAME":"QDRANT",
+        "HOST":os.environ.get("QDRANT_HOST", "localhost"),
+        "PORT_GRPC":os.environ.get("QDRANT_PORT_GRPC", "5439"),
+        "PORT_HTTP":os.environ.get("QDRANT_PORT_HTTP", "5438"),
+        "GRPC_CONNECT":os.environ.get("GRPC_CONNECT", True),
+        "COLLECTION_NAME":os.environ.get("VECTOR_DB_COLLECTION_NAME", "NEW_GLOBAL_ALL"),
+    }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -163,8 +174,30 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 STATIC_URL = "static/"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-MEDIA_URL = "media/"
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID",'')
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY",'')
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME",'')
+AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME",'')  # e.g., 'us-east-1'
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+
+# Django Storages settings
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+# URL of your S3 bucket
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+if os.environ.get("STORAGE", "s3") == "s3":
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+    MEDIA_URL = "media/"
+
+MEDIA_ROOT = MEDIA_URL
+
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# MEDIA_URL = "media/"
 
 PROTECTED_MEDIA_ROOT = os.path.join(BASE_DIR, 'protected')
 PROTECTED_MEDIA_URL = "protected/"
@@ -405,7 +438,12 @@ SAGUBAGU_API_KEY = os.environ.get("SAGUBAGU_API_KEY",'')
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY",'')
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY",'')
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL",'')
-
+FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024 # 25 Mb limit
 CELERY_BROKER_URL = f'redis://{os.environ.get("REDIS_SERVICE", "loaclhost")}:6379/0'
+# SMTP server configuration
 
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+
+SMTP_SERVER = os.environ.get("SMTP_SERVER",'')  # e.g., 'smtp.gmail.com' for Gmail
+SMTP_PORT = 587  # or 465 for SSL
+SMTP_USER = os.environ.get("SMTP_USER",'')
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD",'')

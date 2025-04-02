@@ -1,7 +1,8 @@
-FROM python:3.8-slim
+FROM python:3.11-slim
 
 # Install dependencies
-RUN apt-get update && apt-get install -y libsasl2-dev curl gcc libldap2-dev \
+RUN apt-get update && apt-get install -y ffmpeg libsm6 libxext6 libsasl2-dev curl gcc libldap2-dev libpq-dev python3-dev\
+
     && DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker} \
     && mkdir -p $DOCKER_CONFIG/cli-plugins \
     && curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose \

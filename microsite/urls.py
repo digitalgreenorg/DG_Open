@@ -19,9 +19,9 @@ from microsite.views import (
     UserDataMicrositeViewSet,
     microsite_media_view,
 )
-from microsite.saagu_baagu import (
-    ScanHistoryAPIView,
-)
+# from microsite.saagu_baagu import (
+#     ScanHistoryAPIView,
+# )
 
 router = DefaultRouter()
 router.register(r"", OrganizationMicrositeViewSet, basename="o")
@@ -46,5 +46,5 @@ urlpatterns = [
     path("microsite_media_view", microsite_media_view, name="microsite_media_view"),
     path('feedback/', MyModelListCreateView.as_view(), name='mymodel-list-create'),
     path('feedback/<str:pk>/', MyModelDetailView.as_view(), name='mymodel-detail'),
-    path('scan_history/', ScanHistoryAPIView.as_view(), name='scan_history_api'),
+    # path('scan_history/', ScanHistoryAPIView.as_view(), name='scan_history_api'),
 ]

@@ -1913,21 +1913,22 @@ class DataBaseViewSet(GenericViewSet):
                 # save the list of files to a temp directory
                 file_path = file_ops.create_directory(
                     settings.DATASET_FILES_URL, [dataset_name, source])
+
                 df = pd.read_sql(query_string, mydb)
                 if df.empty:
                     return Response({"data": [f"No data was found for the filter applied. Please try again."]},
                                     status=status.HTTP_400_BAD_REQUEST)
                 df = df.astype(str)
-                df.to_excel(file_path + "/" + file_name + ".xls")
+                df.to_csv(file_path + "/" + file_name + ".csv")
                 instance = DatasetV2File.objects.create(
                     dataset=dataset,
                     source=source,
                     file=os.path.join(dataset_name, source,
-                                      file_name + ".xls"),
+                                      file_name + ".csv"),
                     file_size=os.path.getsize(
                         os.path.join(settings.DATASET_FILES_URL, dataset_name, source, file_name + ".xls")),
                     standardised_file=os.path.join(
-                        dataset_name, source, file_name + ".xls"),
+                        dataset_name, source, file_name + ".csv"),
                 )
                 # result = os.listdir(file_path)
                 serializer = DatasetFileV2NewSerializer(instance)
@@ -1985,17 +1986,17 @@ class DataBaseViewSet(GenericViewSet):
 
                 file_path = file_ops.create_directory(
                     settings.DATASET_FILES_URL, [dataset_name, source])
-                df.to_excel(os.path.join(
+                df.to_csv(os.path.join(
                     file_path, file_name + ".xls"))
                 instance = DatasetV2File.objects.create(
                     dataset=dataset,
                     source=source,
                     file=os.path.join(dataset_name, source,
-                                      file_name + ".xls"),
+                                      file_name + ".csv"),
                     file_size=os.path.getsize(
                         os.path.join(settings.DATASET_FILES_URL, dataset_name, source, file_name + ".xls")),
                     standardised_file=os.path.join(
-                        dataset_name, source, file_name + ".xls"),
+                        dataset_name, source, file_name + ".csv"),
                 )
                 # result = os.listdir(file_path)
                 serializer = DatasetFileV2NewSerializer(instance)

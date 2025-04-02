@@ -1,0 +1,54 @@
+.card {
+    background-color: #eff2f3;
+    color: #000000;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: left;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    margin: 10px;
+    height: 150px
+}
+
+.secondarycard {
+    background-color: #eff2f3;
+    color: #000000;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: left;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    margin: 10px;
+    height: 100px
+}
+.block-container {
+    padding-bottom: 0rem !important;
+}
+
+/* .st-emotion-cache-1dp5vir {
+    display: none !important;
+} */
+
+.title {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.sub-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.bullet_green {
+    color: green;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.bullet_orange {
+    color: #FF780A;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.percentage {
+    font-size: 18px;
+}

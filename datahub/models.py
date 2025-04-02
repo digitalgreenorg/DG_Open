@@ -4,9 +4,13 @@ from datetime import timedelta
 from email.mime import application
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import Storage
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.text import Truncator
 from pgvector.django import VectorField
 
 from accounts.models import User
@@ -56,6 +60,10 @@ class Organization(TimeStampMixin):
     org_description = models.TextField(max_length=512, null=True, blank=True)
     website = models.CharField(max_length=255, null=True, blank=True)
     status = models.BooleanField(default=True)
+    country = models.JSONField(default=dict)
+    state = models.JSONField(default=dict)
+    district = models.JSONField(default=dict)
+    village = models.JSONField(default=dict)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -118,7 +126,13 @@ RESOURCE_URL_TYPE = (
     ("pdf", "pdf"),
     ("file", "file"),
     ("website", "website"),
-    ("api", "api")
+    ("api", "api"),
+    ("s3", "s3"),
+    ("google_drive", "google_drive"),
+    ("dropbox", "dropbox"),
+    ("azure_blob", "azure_blob")
+
+
 )
 
 USAGE_POLICY_APPROVAL_STATUS = (
@@ -313,12 +327,23 @@ class Resource(TimeStampMixin):
     Resource Module -- Any user can create resource.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=100)
-    description = models.TextField(max_length=250)
+    title = models.CharField(max_length=1000)
+    description = models.TextField(max_length=2500)
+    country = models.JSONField(default=dict)
+    state = models.JSONField(default=dict)
+    district = models.JSONField(default=dict)
+    village = models.JSONField(default=dict)
     user_map = models.ForeignKey(UserOrganizationMap, on_delete=models.CASCADE)
     category = models.JSONField(default=dict)
     accessibility = models.CharField(max_length=255, null=True, choices=USAGE_POLICY_APPROVAL_STATUS, default="public")
-
+    countries = ArrayField( models.CharField(max_length=100),  # base_field: CharField with max length
+        null=True,  # allow null values
+        default=list,  # default value as an empty list
+    )
+    sub_categories = ArrayField(  models.CharField(max_length=100),  # base_field: CharField with max length
+        null=True,  # allow null values
+        default=list,  # default value as an empty list
+    )
     def __str__(self) -> str:
         return self.title
 
@@ -329,16 +354,26 @@ class ResourceFile(TimeStampMixin):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE, related_name="resources")
-    file = models.FileField(upload_to=settings.RESOURCES_URL, null=True, blank=True)
+    file = models.FileField(upload_to=settings.RESOURCES_URL, null=True, blank=True, max_length=2000)
     file_size = models.PositiveIntegerField(null=True, blank=True)
     type = models.CharField(max_length=20, null=True, choices=RESOURCE_URL_TYPE, default="file")
-    url = models.CharField(max_length=200, null=True)
-    transcription = models.CharField(max_length=10000,null=True, blank=True)
+    url = models.CharField(max_length=2000, null=True)
+    transcription = models.CharField(max_length=20000,null=True, blank=True)
     embeddings_status = models.CharField(max_length=20, null=True, choices=EMBEDDINGS_STATUS, default="in-progress")
     embeddings_status_reason = models.CharField(max_length=1000, null=True)
     def __str__(self) -> str:
         return self.file.name
     
+    def delete(self, *args, **kwargs):
+        self.file.delete(save=False)  # Delete the file from the file system
+        super().delete(*args, **kwargs)  # Call the superclass delete method
+
+# Signal to ensure file deletion
+@receiver(post_delete, sender=ResourceFile)
+def delete_file_on_resourcefile_delete(sender, instance, **kwargs):
+    if instance.file:
+        instance.file.delete(save=False)
+
 class DatasetV2FileReload(TimeStampMixin):
     dataset_file = models.ForeignKey(DatasetV2File, on_delete=models.CASCADE, related_name="dataset_file")
 
@@ -351,6 +386,18 @@ class SubCategory(TimeStampMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="subcategory_category")
+    description = models.CharField(max_length=200, null=True)  # Adjust max_length as needed
+
+    def save(self, *args, **kwargs):
+        if not self.description:
+            self.description = Truncator(self.name).chars(80)
+        super().save(*args, **kwargs)
+
+class ResourceSubCategoryMap(TimeStampMixin):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name="resource_sub_category_map")
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, related_name="resource_cat_map")
+    
 
 
 class DatasetSubCategoryMap(TimeStampMixin):
@@ -358,11 +405,6 @@ class DatasetSubCategoryMap(TimeStampMixin):
     sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name="dataset_sub_category_map")
     dataset = models.ForeignKey(DatasetV2, on_delete=models.CASCADE, related_name="dataset_cat_map")
 
-
-class ResourceSubCategoryMap(TimeStampMixin):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name="resource_sub_category_map")
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, related_name="resource_cat_map")
 
 class ResourceUsagePolicy(TimeStampMixin):
     """
@@ -395,12 +437,13 @@ class LangchainPgEmbedding(models.Model):
     cmetadata = models.JSONField()
     custom_id = models.CharField(max_length=255)
     uuid = models.UUIDField(primary_key=True)
+    __table_args__ = {'extend_existing': True}
 
     class Meta:
         db_table = 'langchain_pg_embedding'
 
-    # def __str__(self):
-    #     return f"LangchainPgEmbedding(uuid={self.uuid}, document={self.document})"
+    def __str__(self):
+        return f"LangchainPgEmbedding(uuid={self.uuid}, collection_id={self.custom_id})"
 
 # class Conversation(TimeStampMixin):
 #     BOT_CHOICES = (
@@ -439,29 +482,14 @@ class Messages(TimeStampMixin):
     bot_reference = models.CharField(max_length=50, null=True)
     query = models.CharField(max_length=10000, null=True)
     translated_message = models.CharField(max_length=10000, null=True)
-    # message_input_time = models.DateTimeField(null=True)
-    # input_speech_to_text_start_time = models.DateTimeField(null=True)
-    # input_speech_to_text_end_time = models.DateTimeField(null=True)
-    # input_translation_start_time = models.DateTimeField(null=True)
-    # input_translation_end_time = models.DateTimeField(null=True)
     query_response = models.CharField(max_length=10000, null=True)
-    # message_translated_response = models.CharField(max_length=10000, null=True)
-    # response_translation_start_time = models.DateTimeField(null=True)
-    # response_translation_end_time = models.DateTimeField(null=True)
-    # response_text_to_speech_start_time = models.DateTimeField(null=True)
-    # response_text_to_speech_end_time = models.DateTimeField(null=True)
-    # message_response_time = models.DateTimeField(null=True)
-    # main_bot_logic_start_time = models.DateTimeField(null=True)
-    # main_bot_logic_end_time = models.DateTimeField(null=True)
-    # video_retrieval_start_time = models.DateTimeField(null=True)
-    # video_retrieval_end_time = models.DateTimeField(null=True)
     feedback = models.CharField(max_length=4096, null=True)
     input_type = models.CharField(max_length=20, choices=INPUT_TYPES, null=True)
     input_language_detected = models.CharField(max_length=20, null=True)
     retrieved_chunks = models.ManyToManyField(LangchainPgEmbedding, null=True)
     condensed_question = models.CharField(max_length=20000, null=True)
     prompt_usage = models.JSONField(default={}, null=True)
-
+    output = models.JSONField(default={}, null=True)
     # class Meta:
     #     table_name = "messages"
 
@@ -473,3 +501,35 @@ class Messages(TimeStampMixin):
 #     class Meta:
 #         db_table = 'datahub_messages_retrieved_chunks'
 
+from langchain_core.pydantic_v1 import BaseModel, Field
+
+
+class OutputParser(BaseModel):
+    response: str = Field(description="AI Assistant Response")
+    follw_up_questions: list = Field(description="Follow-up questions, give users examples of at least list of 3 questions which they can ask as a follow-up. Remember Build those questions from the provided context only other wise give empty")
+
+def load_category_and_sub_category():
+    import pandas as pd
+    df = pd.read_csv("Restructured_Agricultural_Data_with_Descriptions.csv")
+
+    # Iterate through each row in the DataFrame
+    for index, row in df.iterrows():
+        category_name = row['Category']
+        category_description = row['Category']+" Description"
+        subcategory_name = row['Subcategory']
+        subcategory_description = row['title']
+        
+        # Get or create the Category
+        category, created = Category.objects.get_or_create(
+            name=category_name,
+            defaults={'description': category_description}
+        )
+        
+        # Create the SubCategory
+        subcategory, created = SubCategory.objects.get_or_create(
+            name=subcategory_name,
+            defaults={'category': category, 'description': subcategory_description},
+        )
+        print(f"{index} completed out of 250")
+
+    print("Data has been successfully saved to the database.")
