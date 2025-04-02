@@ -63,6 +63,8 @@ urlpatterns = [
     path("connectors/", include("connectors.urls")),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('protected-media/', protected_media_view),
+    path("ai/", include("ai.urls")),
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.PROTECTED_MEDIA_URL, document_root=settings.PROTECTED_MEDIA_ROOT)
 

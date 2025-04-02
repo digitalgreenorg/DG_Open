@@ -20,6 +20,7 @@ from datahub.views import (
     DocumentSaveView,
     DropDocumentView,
     EmbeddingsViewSet,
+    FetchFiles,
     MailInvitationViewSet,
     MessagesCreateViewSet,
     MessagesViewSet,
@@ -29,6 +30,7 @@ from datahub.views import (
     PolicyListAPIView,
     ResourceFileManagementViewSet,
     ResourceManagementViewSet,
+    ResourceManagementAutoCategorizationViewSet, # Added for Auto categorization
     ResourceUsagePolicyListCreateView,
     ResourceUsagePolicyRetrieveUpdateDestroyView,
     StandardisationTemplateView,
@@ -37,6 +39,10 @@ from datahub.views import (
     TeamMemberViewSet,
     UsagePolicyListCreateView,
     UsagePolicyRetrieveUpdateDestroyView,
+    telegram_dashboard,
+    coco_dashboard,
+    farmer_registry_dashboard,
+    da_registry_dashboard
 )
 
 router = DefaultRouter()
@@ -57,10 +63,13 @@ router.register(r"dataset_ops", DatasetV2ViewSetOps, basename="")
 router.register(r"standardise", StandardisationTemplateView, basename=Constants.STANDARDISE)
 router.register(r"newdashboard", DatahubNewDashboard, basename=Constants.NEW_DASHBOARD)
 router.register(r"resource_management", ResourceManagementViewSet, basename=Constants.RESOURCE_MANAGEMENT)
+# New updated V2 route for Auto Categorization
+router.register(r"v2/resource_management", ResourceManagementAutoCategorizationViewSet, basename=Constants.RESOURCE_MANAGEMENT_V2)
 router.register(r"resource_file", ResourceFileManagementViewSet, basename=Constants.RESOURCE_FILE_MANAGEMENT)
 router.register(r'categories', CategoryViewSet, basename=Constants.CATEGORY)
 router.register(r'subcategories', SubCategoryViewSet, basename=Constants.SUBCATEGORY)
 router.register(r'embeddings', EmbeddingsViewSet, basename='embeddings')
+router.register(r'files', FetchFiles, basename='embeddings')
 
 urlpatterns = [
     path("", include(router.urls)),
@@ -72,5 +81,9 @@ urlpatterns = [
     path('resource_usage_policies/<uuid:pk>/', ResourceUsagePolicyRetrieveUpdateDestroyView.as_view(), name='resource_usage-policy-retrieve-update-destroy'),
     path('messages/<uuid:pk>/', MessagesViewSet.as_view(), name='messages-retrieve-update-destroy'),
     path('messages/', MessagesCreateViewSet.as_view(), name='messages_create'),
+    path('streamlit/telegram_bot_dashboard/', telegram_dashboard, name='streamlit_telegram_dashboard'),
+    path('streamlit/coco_dashboard/', coco_dashboard, name='streamlit_coco_dashboard'),
+    path('streamlit/farmer_registry_dashboard/', farmer_registry_dashboard, name='streamlit_farmer_registry_dashboard'),
+    path('streamlit/da_registry_dashboard/', da_registry_dashboard, name='streamlit_da_registry_dashboard'),
 
 ]

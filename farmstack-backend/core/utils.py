@@ -1,10 +1,17 @@
 import datetime
+import hashlib
+import json
 import logging
 import os
+import secrets
+import smtplib
 import time
 import urllib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from inspect import formatannotationrelativeto
 from urllib import parse
+
 import pandas as pd
 import requests
 import sendgrid
@@ -17,14 +24,11 @@ from rest_framework.response import Response
 from sendgrid.helpers.mail import Content, Email, Mail
 
 from core.constants import Constants
-import secrets
-import hashlib
-import json
 
 LOGGER = logging.getLogger(__name__)
 
-SG = sendgrid.SendGridAPIClient(settings.SENDGRID_API_KEY)
-FROM_EMAIL = Email(settings.EMAIL_HOST_USER)
+# SG = sendgrid.SendGridAPIClient(settings.SENDGRID_API_KEY)
+# FROM_EMAIL = Email(settings.EMAIL_HOST_USER)
 
 
 class Utils:
@@ -42,32 +46,57 @@ class Utils:
             content (None, optional): _description_. Defaults to None.
             # subject (None, optional): _description_. Defaults to None.
         """
-        content = Content("text/html", content)
-        mail = Mail(FROM_EMAIL, to_email, subject, content, is_multiple=True)
+        # content = Content("text/html", content)
+        # mail = Mail(FROM_EMAIL, to_email, subject, content, is_multiple=True)
+        # try:
+        #     SG.client.mail.send.post(request_body=mail.get())
+        # # except exceptions.BadRequestsError as error:
+        # except exceptions.UnauthorizedError as error:
+        #     LOGGER.error(
+        #         "Failed to send email Subject: %s with ERROR: %s",
+        #         subject,
+        #         error.body,
+        #         exc_info=True,
+        #     )
+        #     # type: ignore
+        #     return Response({"Error": "Failed to send email "}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # except urllib.error.URLError as error:  # type: ignore
+        #     LOGGER.error(
+        #         "Failed to send email Subject: %s with ERROR: %s",
+        #         subject,
+        #         error,
+        #         exc_info=True,
+        #     )
+        #     # type: ignore
+        #     return Response({"Error": "Failed to send email "}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # return Response({"Message": "Email successfully sent!"}, status=status.HTTP_200_OK)
+        
+        # Create a MIME object
+        msg = MIMEMultipart()
+        msg['From'] = settings.SMTP_USER
+        msg['To'] = ", ".join(to_email) if isinstance(to_email, list) else to_email
+        msg['Subject'] = subject
+
+        # Attach the email content to the MIME object
+        msg.attach(MIMEText(content, 'html'))
+
         try:
-            SG.client.mail.send.post(request_body=mail.get())
-        # except exceptions.BadRequestsError as error:
-        except exceptions.UnauthorizedError as error:
-            LOGGER.error(
-                "Failed to send email Subject: %s with ERROR: %s",
-                subject,
-                error.body,
-                exc_info=True,
-            )
-            # type: ignore
-            return Response({"Error": "Failed to send email "}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except urllib.error.URLError as error:  # type: ignore
-            LOGGER.error(
-                "Failed to send email Subject: %s with ERROR: %s",
-                subject,
-                error,
-                exc_info=True,
-            )
-            # type: ignore
-            return Response({"Error": "Failed to send email "}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Connect to the SMTP server
+            server = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT)
+            server.starttls()  # Secure the connection with TLS
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
 
-        return Response({"Message": "Email successfully sent!"}, status=status.HTTP_200_OK)
+            # Send the email
+            server.sendmail(settings.SMTP_USER, to_email, msg.as_string())
 
+            # Close the connection
+            server.quit()
+
+            print("Email successfully sent!")
+
+        except smtplib.SMTPException as e:
+            print(f"Failed to send email: {e}")
 
 def replace_query_param(url, key, val, req):
     """

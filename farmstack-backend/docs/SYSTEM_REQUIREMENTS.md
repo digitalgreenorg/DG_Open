@@ -1,25 +1,31 @@
+# System Requirements
 
-## System Requirements
+## Hardware Requirements
+Below is a table specifying typical hosting server requirements for FarmStack.
 
-### Deploy and set up farmstack on your infrastructure.
+| Requirement Category | Specification Detail      | Notes/Comments                                                                           |
+|----------------------|---------------------------|------------------------------------------------------------------------------------------|
+| **CPU**              | Octa-Core Processor (8 vCPUs) | For handling moderate traffic and processing requirements.                               |
+| **Memory (RAM)**     | 8 GB DDR4/DDR5            | For efficient handling of user requests. Also for running the Docker containers and OS itself. |
+| **Storage**          | 500 GB                    | For storage of datasets. Also, Docker images will be pulled.                             |
+| **Bandwidth**        | 50 GB/Month               | For handling file uploads/downloads. To handle concurrent requests for uploads/downloads.|
+| **Operating System** | Ubuntu 20                 | Compatibility with the application to be hosted.                                         |
+| **Security**         | SSL Certificate           | LetsEncrypt - For secured communication between client and server.                       |
+| **Network Uptime**   | Always                    | Ensures reliability and availability of the server.                                      |
 
-Minimum Requirement
+*As the application continues to evolve, System Requirements are subject to change based on technological advancements and operational needs.*
 
-```
-vCPUs 2
-RAM(GiB) 4.0
-Persistent Memory(GB) 50
-Operating System Linux
-```
+## Software Requirements
+Once the hardware requirements are met, a few prerequisites need to be installed to run the FarmStack application seamlessly.
 
-We use Docker to package the farmstack application. Hence, docker should be installed as pre-requisite.
+### Docker
 
-*RAM is directly proportional to the number of datasets with size processing done concurrently.*
+The tech stack of FarmStack is as follows:
 
-*Persistent Memory is directly proportional to the number of datasets you would like to store in Farmstack.*
-
-### Run farmstack on your local
-
-Follow the instructions given in the INSTALLER_GUIDE document to set up the farmstack frontend and backend along with any relational database of your choice.
-
-[Installtion Guide](https://github.com/digitalgreenorg/farmstack-backend/tree/main/docs/INSTALLATION_GUIDE.md)
+| Application Stack | Notes/Comments |
+|-------------------|----------------|
+| **Nginx**         | Web Server      |
+| **Django**        | Backend         |
+| **Gunicorn**      | Backend Web Server |
+| **Postgres**      | Database        |
+| **Redis**         | Cache           |

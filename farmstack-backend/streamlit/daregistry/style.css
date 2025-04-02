@@ -1,0 +1,147 @@
+.basic_card {
+    background-color: #f7f7f7;
+    color: #000000;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: left;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    margin: 15px auto;
+    height: 150px;
+    box-sizing: border-box;
+    width: 300px;
+}
+
+.basic_card_row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.grid_cont {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 5px;
+    margin-bottom: 20px;
+}
+
+.basic_card_row_item {
+    font-size: 15px;
+    text-align: left;
+    flex: 1;
+}
+
+.gender-info {
+    font-size: 15px;
+    text-align: left;
+}
+
+.main_heading {
+    text-align: left;
+    color: #3D4A52;
+    font-size: 32px;
+    font-weight: 700;
+    font-family: sans-serif;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.sub-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.sub-list-title {
+    font-size: 14px;
+}
+
+.value_style {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.flex_container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.bullet_green {
+    color: green;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.bullet_orange {
+    color: #FF780A;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.bullet_yellow {
+    color: #F5B406;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.bullet_blue {
+    color: #0050D6;
+    font-size: 24px;
+    margin-right: 10px;
+}
+
+.percentage {
+    font-size: 18px;
+}
+
+.region_percentage_container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+@media only screen and (max-width: 600px) {
+    .grid_cont {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .main_heading {
+        font-size: 24px;
+    }
+}
+
+@media only screen and (min-width: 600px) and (max-width: 900px) {
+    .grid_cont {
+        grid-template-columns: repeat(2, 1fr);
+        grid-gap: 22px;
+    }
+}
+
+@media only screen and (min-width: 900px) and (max-width: 1200px) {
+    .grid_cont {
+        grid-template-columns: repeat(3, 1fr);
+        grid-gap: 15px;
+    }
+}
+
+@media only screen and (min-width: 1200px) and (max-width: 1650px) {
+    .grid_cont {
+        grid-template-columns: repeat(4, 1fr);
+        /* grid-gap: 22px; */
+    }
+}
+
+@media only screen and (min-width: 1650px) and (max-width: 2000px) {
+    .grid_cont {
+        grid-template-columns: repeat(4, 1fr);
+        grid-gap: 13px;
+    }
+}
+
+@media only screen and (min-width: 2000px) {
+    .grid_cont {
+        grid-template-columns: repeat(5, 1fr);
+        grid-gap: 12px;
+    }
+}

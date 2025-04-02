@@ -1,7 +1,11 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
 
 # from utils.validators import validate_file_size
@@ -68,7 +72,7 @@ class UserRole(models.Model):
 
 
 @auto_str
-class User(AbstractBaseUser, TimeStampMixin):
+class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
     """User model of all the datahub users
 
     status:
@@ -77,9 +81,6 @@ class User(AbstractBaseUser, TimeStampMixin):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    password = None
-    last_login = None
-    is_superuser = None
     email = models.EmailField(max_length=255, unique=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
@@ -100,16 +101,28 @@ class User(AbstractBaseUser, TimeStampMixin):
     on_boarded_by = models.ForeignKey('self', null=True, blank=True, on_delete=models.PROTECT)
     approval_status = models.BooleanField(default=True)
     subscription = models.CharField(max_length=50, null=True, blank=True)
+    
+    # The following fields are provided by AbstractBaseUser and PermissionsMixin
+    password = models.CharField(max_length=128)  # Default password field
+    last_login = models.DateTimeField(null=True, blank=True)
+    is_superuser = models.BooleanField(default=False, blank=True)
 
     objects = UserManager()
 
     USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []  # Email is the only required field for creating a user
 
     def get_full_name(self):
         """
-        Helper Functions
+        Helper function to return the user's full name.
         """
-        return f"{self.first_name} - {self.last_name}"
+        return f"{self.first_name} {self.last_name}".strip()
+
+    def get_short_name(self):
+        """
+        Helper function to return the user's short name (first name).
+        """
+        return self.first_name
 
     def __str__(self):
         return self.email

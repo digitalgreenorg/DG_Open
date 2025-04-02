@@ -1,17 +1,11 @@
-version: '3'
-
 services:
-  datahub-be:
-    # restart: always
-    build: .
-    command: >
-      sh -c "python manage.py makemigrations &&
-       python manage.py migrate &&
-       python manage.py loaddata db_scripts/userrole_fixture.yaml &&
-      python manage.py loaddata db_scripts/initial_data.yaml &&  python manage.py runserver 0.0.0.0:8000" 
-    # image: farmstack/datahub-be:local
-    # container_name: datahub-be
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    container_name: qdrant
     ports:
+      - 5438:6333
+      - 5439:6334
       - "8000:8000"
     depends_on:
       - db
@@ -26,26 +20,5 @@ services:
       - db:db
     networks:
       - postgresql-network
-
-  db:
-    image: postgres
     volumes:
-      - ./data/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - "POSTGRES_HOST_AUTH_METHOD=trust"
-    hostname: postgres
-    ports:
-      - '5432:5432'
-    networks:
-      - postgresql-network
-
-volumes:
-  db_data:
-    driver: local
-
-networks:
-  postgresql-network:
-    driver: bridge
+      - ./qdrant_data:/qdrant_data

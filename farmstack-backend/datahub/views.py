@@ -6,22 +6,29 @@ import logging
 import operator
 import os
 import pickle
+import random
 import re
 import shutil
+import string
 import sys
 import threading
+import uuid
 from calendar import c
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import reduce
 from pickle import TRUE
 from urllib.parse import parse_qs, unquote, urlparse
-import uuid
 
+import boto3
 import django
+import dropbox
 import numpy as np
 import pandas as pd
+import requests
+from azure.storage.blob import BlobServiceClient
 from django.conf import settings
 from django.contrib.admin.utils import get_model_from_relation
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -44,15 +51,17 @@ from django.db.models.functions import Concat
 # from django.db.models.functions import Index, Substr
 from django.http import JsonResponse
 from django.shortcuts import render
-import requests
 from drf_braces.mixins import MultipleSerializersViewMixin
+from google.oauth2.credentials import Credentials
+from google.oauth2.service_account import Credentials as ServiceAccountCredentials
+from googleapiclient.discovery import build
 from jsonschema import ValidationError
 from psycopg2 import connect
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from python_http_client import exceptions
 from pytube import Channel, Playlist, YouTube
 from rest_framework import generics, pagination, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -66,6 +75,10 @@ from accounts.serializers import (
     UserSerializer,
     UserUpdateSerializer,
 )
+from ai.open_ai_utils import qdrant_embeddings_delete_file_id
+from ai.retriever.conversation_retrival import ConversationRetrival
+from ai.retriever.manual_retrival import Retrival
+from ai.vector_db_builder.vector_build import create_vector_db, insert_auto_cat_data
 from connectors.models import Connectors
 from connectors.serializers import ConnectorsListSerializer
 from core.constants import Constants, NumericalConstants
@@ -92,6 +105,9 @@ from datahub.models import (
     Resource,
     StandardisationTemplate,
     UserOrganizationMap,
+)
+from datahub.serializers import (
+    ResourceAutoCatSerializer,  # Added for Auto Categorizaion
 )
 from datahub.serializers import (
     DatahubDatasetFileDashboardFilterSerializer,
@@ -161,6 +177,9 @@ from .models import (
 from .serializers import (
     APIBuilderSerializer,
     CategorySerializer,
+    CategorySubcategoryInputSerializer,
+    FileItemSerializer,
+    FileResponseSerializer,
     LangChainEmbeddingsSerializer,
     MessagesChunksRetriveSerializer,
     MessagesRetriveSerializer,
@@ -170,6 +189,7 @@ from .serializers import (
     ResourceFileSerializer,
     ResourceListSerializer,
     ResourceUsagePolicyDetailSerializer,
+    SourceDetailsSerializer,
     SubCategorySerializer,
     UsagePolicyDetailSerializer,
     UsagePolicySerializer,
@@ -418,7 +438,11 @@ class ParticipantViewSet(GenericViewSet):
             _type_: Returns the saved details.
         """
         return serializer.save()
-
+    def generate_random_password(self, length=12):
+        """Generates a random password with the given length."""
+        characters = string.ascii_letters + string.digits + string.punctuation
+        return ''.join(random.choice(characters) for _ in range(length))
+    
     @authenticate_user(model=Organization)
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -428,8 +452,15 @@ class ParticipantViewSet(GenericViewSet):
         org_serializer.is_valid(raise_exception=True)
         org_queryset = self.perform_create(org_serializer)
         org_id = org_queryset.id
+        data=request.data.copy()
         UserCreateSerializerValidator.validate_phone_number_format(request.data)
-        user_serializer = UserCreateSerializer(data=request.data)
+        generated_password = self.generate_random_password()
+        hashed_password = make_password(generated_password)
+
+        # Add the hashed password to the request data
+        data.update({'password': hashed_password})
+
+        user_serializer = UserCreateSerializer(data=data)
         user_serializer.is_valid(raise_exception=True)
         user_saved = self.perform_create(user_serializer)
         user_org_serializer = UserOrganizationMapSerializer(
@@ -459,6 +490,7 @@ class ParticipantViewSet(GenericViewSet):
                 "participant_admin_name": participant_full_name,
                 "participant_organization_name": request.data.get("name"),
                 "datahub_admin": admin_full_name,
+                "password": generated_password,
                 Constants.datahub_site: os.environ.get(Constants.DATAHUB_SITE, Constants.datahub_site),
             }
 
@@ -713,6 +745,7 @@ class MailInvitationViewSet(GenericViewSet):
                         subject=os.environ.get("DATAHUB_NAME", "datahub_name")
                                 + Constants.PARTICIPANT_INVITATION_SUBJECT,
                     )
+                    emails_found.append(email)
                 except Exception as e:
                     emails_not_found.append()
             failed = f"No able to send emails to this emails: {emails_not_found}"
@@ -3191,7 +3224,6 @@ class ResourceManagementViewSet(GenericViewSet):
             files = request.FILES.getlist('files')  # 'files' is the key used in FormData
             data["files"] = files
             data["user_map"] = user_map
-
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -3204,22 +3236,24 @@ class ResourceManagementViewSet(GenericViewSet):
             return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @transaction.atomic
+    @http_request_mutation
+    @authenticate_user(model=Resource)
     def update(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
             data = request.data.copy()
-            sub_categories_map = data.pop("sub_categories_map")
+            sub_categories_map = data.pop("sub_categories_map", [])
             serializer = self.get_serializer(instance, data=data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             resource_id=serializer.data.get("id")
-            ResourceSubCategoryMap.objects.filter(resource=instance).delete()
+            # ResourceSubCategoryMap.objects.filter(resource=instance).delete()
             
-            sub_categories_map = json.loads(sub_categories_map[0]) if sub_categories_map else []
-            resource_sub_cat_instances= [
-                ResourceSubCategoryMap(resource=instance, sub_category=SubCategory.objects.get(id=sub_cat)
-                                       ) for sub_cat in sub_categories_map]
-            ResourceSubCategoryMap.objects.bulk_create(resource_sub_cat_instances)
+            # sub_categories_map = json.loads(sub_categories_map[0]) if sub_categories_map else []
+            # resource_sub_cat_instances= [
+            #     ResourceSubCategoryMap(resource=instance, sub_category=SubCategory.objects.get(id=sub_cat)
+            #                            ) for sub_cat in sub_categories_map]
+            # ResourceSubCategoryMap.objects.bulk_create(resource_sub_cat_instances)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:
@@ -3245,12 +3279,31 @@ class ResourceManagementViewSet(GenericViewSet):
         except Exception as e:
             LOGGER.error(e)
             return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
+    @http_request_mutation
+    @authenticate_user(model=Resource)
     def destroy(self, request, *args, **kwargs):
         resource = self.get_object()
+        file_ids = ResourceFile.objects.filter(resource_id=resource.id).values_list("id", flat=True)
+        qdrant_embeddings_delete_file_id(file_ids)
         resource.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
+    @transaction.atomic
+    @http_request_mutation
+    @action(detail=False, methods=["delete"])
+    def delete_with_user_map(self, request, *args, **kwargs):
+        try:
+            user_map = request.META.get("map_id")
+            file_ids = ResourceFile.objects.filter(resource__user_map_id=user_map).values_list("id", flat=True)
+            qdrant_embeddings_delete_file_id(file_ids)
+            Resource.objects.filter(user_map_id=user_map).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            LOGGER.error(e,exc_info=True)
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @http_request_mutation
     def retrieve(self, request, *args, **kwargs):
         user_map = request.META.get("map_id")
@@ -3400,6 +3453,76 @@ class ResourceManagementViewSet(GenericViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+
+# New view set for Auto-categarization of the content
+class ResourceManagementAutoCategorizationViewSet(GenericViewSet):
+    '''
+    This View set is the updated verion of ResourceManagementViewSet, the input format is changed and the
+    data have json as well a pdf file for consumption.
+    '''
+    category_queryset = Category.objects.prefetch_related().all()
+    sub_category_queryset = SubCategory.objects.prefetch_related().all()
+    serializer_class = ResourceAutoCatSerializer
+   
+    @http_request_mutation
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        try:
+            user_map = request.META.get("map_id")
+            # request.data._mutable = True
+            data = request.data.copy()
+            files = request.FILES.getlist('files')  # 'files' is the key used in FormData
+            json_files = request.FILES.get('json_files')
+            json_content = json.loads(json_files.read())
+            categorization_list = [(data.get("value_chain"), self.process_sub_category(data.get("value_chain"), data.get('crop_category'))) for data in json_content]
+            category_id_map = {}
+            sub_category_id_map = {}
+            for category, sub_category in categorization_list:
+                if category and validators.format_category_name(category) not in category_id_map.keys():
+                    category_query = self.category_queryset.filter(name=validators.format_category_name(category))
+                    if category_query.exists():
+                        category_id_map[validators.format_category_name(category)] = category_query[0].id
+                    else:
+                        create_new_category = Category.objects.create(name=validators.format_category_name(category), description="")
+                        create_new_category.save()
+                        category_id_map[validators.format_category_name(category)] = create_new_category.id
+                    if sub_category and validators.format_category_name(sub_category) not in sub_category_id_map.keys():
+                        sub_category_query = self.sub_category_queryset.filter(name=validators.format_category_name(sub_category), 
+                                                                               category=category_id_map.get(validators.format_category_name(category)))
+                        if sub_category_query.exists():
+                            sub_category_id_map[validators.format_category_name(sub_category)] = sub_category_query[0].id
+                        else:
+                            create_new_sub_category = SubCategory.objects.create(name=validators.format_category_name(sub_category), 
+                                                                                 category=Category.objects.get(id=category_id_map.get(validators.format_category_name(category))), description="")
+                            create_new_sub_category.save()
+                            sub_category_id_map[validators.format_category_name(sub_category)] = create_new_sub_category.id
+            data["files"] = files
+            data["user_map"] = user_map
+            data["sub_categories_map"] = sub_category_id_map
+            data["uploaded_files"] = []
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            insert_auto_cat_data(serializer.data, json_content, category_id_map, sub_category_id_map)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            LOGGER.error(e, exc_info=True)
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            LOGGER.error(e, exc_info=True)
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def process_sub_category(self, category, sub_category):
+        try:
+            cleaned_text = re.sub(r'\b(n\/a|na)\b', '', sub_category, flags=re.IGNORECASE)
+        except:
+            cleaned_text = ""
+        if not cleaned_text or  cleaned_text == "":
+            return category
+        else:
+            return sub_category
+
+
 class ResourceFileManagementViewSet(GenericViewSet):
     """
     Resource File Management
@@ -3414,24 +3537,56 @@ class ResourceFileManagementViewSet(GenericViewSet):
         try:
             data = request.data.copy()
             resource = data.get("resource")
+            categories=data.pop("category")
+            categories = json.loads(categories[0]) if categories else {}
+            state=categories.get("state")
+            district=categories.get("district")
+            category=categories.get("category_id")
+            country=categories.get("country")
+            sub_category=categories.get("sub_category_id")
+            countries=categories.get("countries")
+            states=categories.get("states")
+            districts=categories.get("districts")
+
             if data.get("type") == "youtube":
-                youtube_urls_response = get_youtube_url(data.get("url"))
-                if youtube_urls_response.status_code == 400:
-                    return youtube_urls_response
-                youtube_urls = youtube_urls_response.data
-                playlist_urls = [{"resource": resource, "type":"youtube", **row} for row in youtube_urls]
-                for row in playlist_urls:
-                    serializer = self.get_serializer(data=row)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    LOGGER.info(f"Embeding creation started for youtube url: {row.get('url')}")
-                    VectorDBBuilder.create_vector_db.delay(serializer.data)
+                # youtube_urls_response = get_youtube_url(data.get("url"))
+                # if youtube_urls_response.status_code == 400:
+                #     return youtube_urls_response
+                # youtube_urls = youtube_urls_response.data
+                row = {"resource": resource, "type":"youtube", "transcription": data.get("transcription"), "url": data.get("url")}
+                # for row in playlist_urls:
+                serializer = self.get_serializer(data=row)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                LOGGER.info(f"Embeding creation started for youtube url: {row.get('url')}")
+                serializer_data = serializer.data
+                serializer_data["state"] = state
+                serializer_data["category"] = category
+                serializer_data["sub_category"] = sub_category
+                serializer_data["country"] = country
+                serializer_data["district"] = district
+                serializer_data["countries"] = countries
+                serializer_data["states"] = states
+                serializer_data["districts"] = districts
+
+                create_vector_db.delay(serializer_data)
+                # create_vector_db(serializer_data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 serializer = self.get_serializer(data=request.data, partial=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                VectorDBBuilder.create_vector_db.delay(serializer.data)
+                serializer_data = serializer.data
+                serializer_data["state"] = state
+                serializer_data["category"] = category
+                serializer_data["sub_category"] = sub_category
+                serializer_data["country"] = country
+                serializer_data["district"] = district
+                serializer_data["countries"] = countries
+                serializer_data["states"] = states
+                serializer_data["districts"] = districts
+                create_vector_db.delay(serializer_data)
+                # create_vector_db.delay(serializer_data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
@@ -3440,15 +3595,20 @@ class ResourceFileManagementViewSet(GenericViewSet):
             return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @transaction.atomic
+    @http_request_mutation
+    @authenticate_user(model=ResourceFile)
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        resourcefile_id = instance.id
-        collections_to_delete = LangchainPgCollection.objects.filter(name=resourcefile_id)
-        collections_to_delete.delete()
-        instance.delete()
+        try:
+            instance = self.get_object()
+            resourcefile_id = instance.id
+            qdrant_embeddings_delete_file_id([resourcefile_id])
+            instance.delete()
+        except Exception as e:
+            LOGGER.error(e,exc_info=True)
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
+    
     @action(detail=False, methods=["post"])
     def resource_live_api_export(self, request):
         """This is an API to fetch the data from an External API with an auth token
@@ -3497,7 +3657,8 @@ class ResourceFileManagementViewSet(GenericViewSet):
                         serializer = ResourceFileSerializer(data=serializer_data)
                         serializer.is_valid(raise_exception=True)
                         serializer.save()
-                        VectorDBBuilder.create_vector_db.delay(serializer.data)
+                        # create_vector_db.delay(serializer.data)
+                        create_vector_db.delay(serializer.data)
                         return JsonResponse(serializer.data, status=status.HTTP_200_OK)
                 return Response(file_path)
             LOGGER.error("Failed to fetch data from api")
@@ -3516,7 +3677,6 @@ class ResourceFileManagementViewSet(GenericViewSet):
         """GET method: retrieve an object or instance of the Product model"""
         team_member = self.get_object()
         serializer = self.get_serializer(team_member)
-        # serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 #
@@ -3537,7 +3697,34 @@ class CategoryViewSet(viewsets.ModelViewSet):
             categories_with_subcategories[category.name] = subcategory_names
 
         return Response(categories_with_subcategories, 200)
-
+    
+    @action(detail=False, methods=["POST"])
+    def get_sub_category_id(self, request, *args, **kwargs):
+        serializer = CategorySubcategoryInputSerializer(data=request.data)
+        if serializer.is_valid():
+            category_name = serializer.validated_data['category_name']
+            subcategory_name = serializer.validated_data['subcategory_name']
+            response_data = {
+                'category_id': None,
+                'subcategory_id': None
+            }
+            
+            # Check if the category and subcategory exist
+            try:
+                resource = SubCategory.objects.filter(
+                    category__name__iexact=category_name.strip(),
+                    name__iexact=subcategory_name.strip()
+                ).first()
+                if resource:
+                    response_data['category_id'] = resource.category_id
+                    response_data['title'] = resource.description 
+                    response_data['subcategory_id'] = resource.id  # Assuming both ids are the same
+            except SubCategory.DoesNotExist:
+                return Response({"error": "Category or Subcategory not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 class SubCategoryViewSet(viewsets.ModelViewSet):
     queryset = SubCategory.objects.all()
     serializer_class = SubCategorySerializer
@@ -3610,7 +3797,7 @@ class EmbeddingsViewSet(viewsets.ModelViewSet):
         collection_id = request.GET.get("resource_file")
         collection = LangchainPgCollection.objects.filter(name=str(collection_id)).first()
         if collection:
-            embeddings = LangchainPgEmbedding.objects.filter(collection_id=collection.uuid).values("document")
+            embeddings = LangchainPgEmbedding.objects.filter(collection_id=collection.uuid).values("embedding","document")
         return Response(embeddings)
 
 
@@ -3633,21 +3820,31 @@ class EmbeddingsViewSet(viewsets.ModelViewSet):
         data=request.data
         query = request.data.get("query")
         resource_id = request.data.get("resource")
+        filters = request.data.get("filters", {})
+
         try:
             user_name = User.objects.get(id=user_id).first_name
             history = Messages.objects.filter(user_map=map_id).order_by("-created_at")
             history = history.filter(resource_id=resource_id).first() if resource_id else history.first()
-      
-            # print(chat_history)
-            # chat_history = history.condensed_question if history else ""
-            summary, chunks, condensed_question, prompt_usage = VectorDBBuilder.get_input_embeddings(query, user_name, resource_id, history)
+
+            if request.data.get("chain"):
+                # summary, chunks, condensed_question, prompt_usage = ConversationRetrival.get_input_embeddings_using_chain(query, user_name, resource_id, history)
+                summary, chunks, condensed_question, metadata = VectorDBBuilder.get_input_embeddings_using_chain(query, user_name, resource_id, history, filters)
+
+            else:
+                summary, chunks, condensed_question, metadata = VectorDBBuilder.get_input_embeddings_test(query, user_name, resource_id, history, filters)
+                # summary, chunks, condensed_question, prompt_usage = Retrival.get_input_embeddings(query, user_name, resource_id, history)
             data = {"user_map": UserOrganizationMap.objects.get(id=map_id).id, "resource": resource_id, "query": query, 
-                    "query_response": summary, "condensed_question":condensed_question, "prompt_usage": prompt_usage}
+                    "query_response": summary, "condensed_question":condensed_question, "output": metadata}
             messages_serializer = MessagesSerializer(data=data)
             messages_serializer.is_valid(raise_exception=True)
             message_instance = messages_serializer.save()  # This returns the Messages model instance
             data =  messages_serializer.data
-            if chunks:
+
+            if request.data.get("chain") and chunks:
+                embeddings_id = [row.embeddings_id for row in chunks]
+                message_instance.retrieved_chunks.set(embeddings_id)
+            elif chunks:
                 message_instance.retrieved_chunks.set(chunks.values_list("uuid", flat=True))
             return Response(data)
         except ValidationError as e:
@@ -3768,3 +3965,152 @@ class MessagesCreateViewSet(generics.ListCreateAPIView):
         page = self.paginate_queryset(queryset)
         serializer = MessagesChunksRetriveSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+
+class FetchFiles(viewsets.ModelViewSet):
+    serializer = SourceDetailsSerializer
+    permission_classes = []
+    
+    @action(detail=False, methods=['post'])
+    def fetch_files(self, request):
+        serializer = self.serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            source_type = serializer.validated_data['source_type']
+            details = serializer.validated_data['details']
+            try:
+                # Handle different source types
+                if source_type == 's3':
+                    files = self.fetch_files_from_s3(details)
+                elif source_type == 'google_drive':
+                    files = self.fetch_files_from_google_drive(details)
+                elif source_type == 'dropbox':
+                    files = self.fetch_files_from_dropbox(details)
+                elif source_type == 'azure_blob':
+                    files = self.fetch_files_from_azure_blob(details)
+                else:
+                    return Response({"detail": "Unsupported source type"}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                LOGGER.error(f"Failed to pull the recourds from {source_type} ERROR: {e}")
+                return Response(str(e), 500)
+            
+            if not files:
+                return Response({"detail": "No files found"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Serialize the file response
+            file_response_serializer = FileResponseSerializer(data={'files': files})
+            if file_response_serializer.is_valid():
+                return Response(file_response_serializer.data, status=status.HTTP_200_OK)
+
+            return Response(file_response_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def fetch_files_from_s3(self, details):
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=details['aws_access_key_id'],
+            aws_secret_access_key=details['aws_secret_access_key'],
+            region_name=details['region']
+        )
+        bucket_name = details['bucket_name']
+        files = s3_client.list_objects_v2(Bucket=bucket_name)
+
+        if 'Contents' not in files:
+            return []
+
+        # Allowed file extensions
+        allowed_extensions = ('.pdf', '.json', '.doc', '.docx')
+
+        # Filter files by extension
+        file_list = []
+        for item in files['Contents']:
+            file_name = item['Key']
+            if file_name.lower().endswith(allowed_extensions):
+                https_url = f"https://{bucket_name}.s3.{details['region']}.amazonaws.com/{file_name}"
+                file_list.append({'file_name': str(item['Key']).split("/")[-1], 'file_url': https_url})
+        
+        return file_list
+    
+    # Fetch files from Google Drive
+    def fetch_files_from_google_drive(self, details):
+        creds = ServiceAccountCredentials.from_service_account_file("creds.json")
+        drive_service = build('drive', 'v3', credentials=creds)
+
+        # Define the query to filter files within the specified folder
+        folder_url = details.get('folder_url', '')
+        folder_id_match = re.search(r"folders/([a-zA-Z0-9-_]+)", folder_url)
+        if not folder_id_match:
+            raise ValueError("Invalid folder URL provided.")
+        folder_id = folder_id_match.group(1)
+        # Recursive function to fetch files
+        def fetch_files_in_folder(folder_id):
+            query = f"'{folder_id}' in parents and trashed=false"
+            results = drive_service.files().list(q=query, fields="files(id, name, mimeType)").execute()
+            items = results.get('files', [])
+            
+            pdf_files = []
+            for item in items:
+                # Check if it's a folder or a file
+                if item['mimeType'] == 'application/vnd.google-apps.folder':
+                    # Recursive call for subfolder
+                    pdf_files.extend(fetch_files_in_folder(item['id']))
+                elif item['mimeType'] == 'application/pdf':
+                    # Collect PDF file details
+                    pdf_files.append({
+                        'file_name': item['name'],
+                        'file_url': f"https://drive.google.com/file/d/{item['id']}"
+                    })
+            return pdf_files
+
+        # Fetch files from the root folder provided in details
+        if not folder_id:
+            return []
+
+        return fetch_files_in_folder(folder_id)
+
+    # Fetch files from Dropbox
+    def fetch_files_from_dropbox(self, details):
+        dbx = dropbox.Dropbox(details['access_token'])
+        result = dbx.files_list_folder('')
+        files = result.entries
+
+        if not files:
+            return []
+
+        return [{'file_name': file.name, 'file_url': f"https://www.dropbox.com/home/{file.path_display}"} for file in files]
+
+    # Fetch files from Azure Blob Storage
+    def fetch_files_from_azure_blob(self, details):
+        blob_service_client = BlobServiceClient(account_url=details['account_url'], credential=details['account_key'])
+        container_client = blob_service_client.get_container_client(details['container_name'])
+        blob_list = container_client.list_blobs()
+
+        if not blob_list:
+            return []
+
+        return [{'file_name': blob.name, 'file_url': f"{details['account_url']}/{details['container_name']}/{blob.name}"} for blob in blob_list]
+
+# old_base_url = 'users/resources/'
+# new_base_url = f'https://{settings.AWS_S3_CUSTOM_DOMAIN}/users/resources/'
+
+# resources = ResourceFile.objects.all()
+# total = len(resources)
+# for index, resource in enumerate(resources):
+#     print(f"{index} completed out of {total}")
+#     if resource.file.name.startswith('users/resources/'):
+#         old_path = resource.file.name
+#         new_path = old_path.replace(old_base_url, new_base_url)
+#         resource.file.name = new_path
+#         resource.save()
+def telegram_dashboard(request):
+    return render(request, 'streamlit.html', {'url': os.getenv("TELEGRAM_URL")})
+
+def coco_dashboard(request):
+    return render(request, 'streamlit.html', {'url':os.getenv("COCO_URL")})
+
+def farmer_registry_dashboard(request):
+    return render(request, 'streamlit.html', {'url': os.getenv("FARMER_REGISTRY_URL")})
+
+def da_registry_dashboard(request):
+    return render(request, 'streamlit.html', {'url': os.getenv("DA_REGISTRY_URL")})

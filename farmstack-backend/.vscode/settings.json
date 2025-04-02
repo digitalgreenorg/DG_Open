@@ -1,25 +1,21 @@
 {
-    "files.autoSave": "afterDelay",
-    "editor.fontSize": 15,
-    "editor.cursorStyle": "line",
-    "editor.comments.insertSpace": true,
-    "editor.formatOnSaveMode": "file",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": true
-    },
-    "python.terminal.activateEnvironment": true,
-    "python.analysis.typeCheckingMode": "basic",
-    "python.linting.pylintEnabled": false,
-    "python.formatting.provider": "black",
-    "python.sortImports.args": [
-        "--profile=black",
-    ],
-    "python.formatting.blackArgs": [
-        "--line-length=119"
-    ],
-    "pythonTestExplorer.testFramework": "pytest",
-    "python.testing.autoTestDiscoverOnSaveEnabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.enabled": true,
+  "files.autoSave": "afterDelay",
+  "editor.fontSize": 15,
+  "editor.cursorStyle": "line",
+  "editor.comments.insertSpace": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "python.terminal.activateEnvironment": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.linting.pylintEnabled": false,
+  "python.formatting.provider": "black",
+  "python.sortImports.args": ["--profile=black"],
+  "python.formatting.blackArgs": ["--line-length=119"],
+  "pythonTestExplorer.testFramework": "pytest",
+  "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.enabled": true
 }

@@ -99,3 +99,11 @@ def validate_phone_number(phone_number: str):
         valid = False
 
     return valid
+
+
+def format_category_name(category:str)-> str:
+    try:
+        new_category = category.lower().strip().replace(" ", "_")
+        return new_category
+    except:
+        return category

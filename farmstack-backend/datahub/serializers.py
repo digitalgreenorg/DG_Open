@@ -7,11 +7,11 @@ import shutil
 import string
 import uuid
 from urllib.parse import quote
-from django.core.files.base import ContentFile
 
 import plazy
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.files.base import ContentFile
 from django.core.validators import URLValidator
 from django.db.models import Count, Prefetch, Q
 from django.utils.translation import gettext as _
@@ -65,6 +65,8 @@ from .models import (  # Conversation,
 )
 
 LOGGER = logging.getLogger(__name__)
+
+from ai.vector_db_builder.vector_build import create_vector_db, load_categories
 
 
 class OrganizationRetriveSerializer(serializers.ModelSerializer):
@@ -1136,6 +1138,7 @@ class ResourceSubCategoryMapSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ResourceSerializer(serializers.ModelSerializer):
+    
     class OrganizationRetriveSerializer(serializers.ModelSerializer):
         class Meta:
             model = Organization
@@ -1149,9 +1152,7 @@ class ResourceSerializer(serializers.ModelSerializer):
     resources = ResourceFileSerializer(many=True, read_only=True)
     uploaded_files = serializers.ListField(child=serializers.JSONField(), write_only=True, required=False)
     files = serializers.ListField(child=serializers.ListField(), write_only=True, required=False)
-
     sub_categories_map = serializers.ListField(write_only=True)
-
     organization = OrganizationRetriveSerializer(
         allow_null=True, required=False, read_only=True, source="user_map.organization"
     )
@@ -1175,7 +1176,8 @@ class ResourceSerializer(serializers.ModelSerializer):
             "content_files_count",
             "sub_categories_map",
             "categories",
-            "files"
+            "files",
+            "country"
         )
     
     def get_categories(self, instance):
@@ -1189,9 +1191,282 @@ class ResourceSerializer(serializers.ModelSerializer):
         ).filter(subcategory_category__resource_sub_category_map__resource=instance.id).distinct().all()
         serializer = CategorySerializer(category_and_sub_category, many=True)
         return serializer.data
+    
     def get_content_files_count(self, resource):
         return ResourceFile.objects.filter(resource=resource.id).values('type').annotate(count=Count('type'))
+    
     def construct_file_path(self, instance, filename):
+        # Generate a unique string to append to the filename
+        unique_str = get_random_string(length=8)
+        # Construct the file path
+        file_path = f"users/resources/{unique_str}_{filename.replace('/','')}"
+        return file_path
+    
+    def create_and_process_resource_file(self, resource, resource_file, state, category, sub_category, country, district, countries, states, sub_categories, districts):
+        """
+        A helper function to handle the creation and processing of ResourceFile objects.
+        """
+        # Prepare the common serializer data
+        serializer_data = {
+            "resource": resource.id,
+            "state": state,
+            "category": category,
+            "sub_category": sub_category,
+            "country": country,
+            "district": district,
+            "countries": countries,
+            "states": states,
+            "districts": districts,
+            "sub_categories": sub_categories
+        }
+
+        # Merge additional resource_file-specific data
+        serializer_data.update(resource_file)
+
+        # Create the serializer and save it
+        serializer = ResourceFileSerializer(data=serializer_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        # Log the start of embedding creation
+        LOGGER.info(f"Embedding creation started for url: {resource_file.get('url') or resource_file.get('file')}")
+        
+        # Trigger the tasks
+        serializer_data = serializer.data  # Get the serialized data
+        create_vector_db.delay(serializer_data)
+        # load_categories(serializer_data)
+
+
+    def create(self, validated_data):
+        try:
+            resource_files_data = validated_data.pop("uploaded_files")
+            resource_files = validated_data.pop("files")
+            sub_categories_map = validated_data.pop("sub_categories_map")
+            category_data = validated_data.get("category")
+            
+            # Extract category-related information
+            state = category_data.get("state")
+            district = category_data.get("district")
+            category = category_data.get("category_id")
+            sub_category = category_data.get("sub_category_id")
+            country = category_data.get("country")
+            countries = category_data.get("countries")
+            sub_categories = category_data.get("sub_categories", [])
+            districts = category_data.get("districts", [])
+            states = category_data.get("states", [])
+
+            # Create the resource
+            resource = Resource.objects.create(**validated_data)
+            
+            # Parse resource files data and subcategories map
+            resource_files_data = json.loads(resource_files_data[0]) if resource_files_data else []
+            sub_categories_map = json.loads(sub_categories_map[0]) if sub_categories_map else []
+
+            # Process each resource file
+            for resource_file in resource_files_data:
+                if resource_file.get("type") == "youtube":
+                    playlist_urls = [{"resource": resource.id, **resource_file}]
+                    for row in playlist_urls:
+                        self.create_and_process_resource_file(
+                            resource, row, state, category,
+                            sub_category, country, district,
+                            countries, states, sub_categories,
+                            districts)
+                elif resource_file.get("type") == "api":
+                    with open(resource_file.get("file").replace("/media/", ''), "rb") as outfile:
+                        django_file = ContentFile(outfile.read(), name=f"{resource_file.get('file_name', 'file')}.json")
+                        resource_file['file'] = django_file
+                        self.create_and_process_resource_file(
+                            resource, resource_file, state, 
+                            category, sub_category, country, 
+                            district, countries, states, sub_categories, 
+                            districts)
+                else:
+                    self.create_and_process_resource_file(
+                        resource, resource_file, state, 
+                        category, sub_category, country, district,
+                        countries, states, sub_categories, districts)
+
+            # Process additional files in resource_files[0]
+            for file in resource_files[0]:
+                data = {"resource": resource.id, "file": file, "type": "file"}
+                self.create_and_process_resource_file(resource, data, state, category, sub_category, country, district, countries, states, sub_categories, districts)
+
+            return resource
+        except Exception as e:
+            LOGGER.error(e, exc_info=True)
+            return e
+
+
+
+    # def create(self, validated_data):
+    #     try:
+    #         resource_files_data = validated_data.pop("uploaded_files")
+    #         resource_files = validated_data.pop("files")
+    #         sub_categories_map=validated_data.pop("sub_categories_map")
+    #         state=validated_data.get("category").get("state")
+    #         district=validated_data.get("category").get("district")
+    #         category=validated_data.get("category").get("category_id")
+    #         sub_category=validated_data.get("category").get("sub_category_id")
+    #         country=validated_data.get("category").get("country")
+    #         countries = validated_data.get("category").get("countries")
+    #         sub_categories = validated_data.get("category").get("sub_categories",[])
+    #         districts = validated_data.get("category").get("districts", [])
+    #         states = validated_data.get("category").get("states", [])
+
+    #         resource = Resource.objects.create(**validated_data)
+    #         resource_files_data = json.loads(resource_files_data[0]) if resource_files_data else []
+    #         sub_categories_map = json.loads(sub_categories_map[0]) if sub_categories_map else []
+    #         for resource_file in resource_files_data:
+    #             if resource_file.get("type") == "youtube":
+    #                 playlist_urls=[{"resource": resource.id, **resource_file}]
+    #                 for row in playlist_urls:
+    #                     serializer = ResourceFileSerializer(data=row, partial=True)
+    #                     serializer.is_valid(raise_exception=True)
+    #                     serializer.save()
+    #                     serializer_data = serializer.data
+
+    #                     LOGGER.info(f"Embeding creation started for youtube url: {row.get('url')}")
+    #                     serializer_data = serializer.data
+    #                     serializer_data["state"] = state
+    #                     serializer_data["category"] =category
+    #                     serializer_data["sub_category"] = sub_category
+    #                     serializer_data["country"] = country
+    #                     serializer_data["district"] = district
+    #                     serializer_data["countries"] = countries
+    #                     serializer_data["states"] = states
+    #                     serializer_data["districts"] = districts
+
+    #                     serializer_data["sub_categories"] = sub_categories
+    #                     create_vector_db.delay(serializer_data)
+    #                     load_categories.delay(serializer_data)
+    #             elif resource_file.get("type") == "api":
+    #                 with open(resource_file.get("file").replace("/media/", ''), "rb") as outfile:  # Open the file in binary read mode
+    #                     # Wrap the file content using Django's ContentFile
+    #                     django_file = ContentFile(outfile.read(), name=f"{resource_file.get('file_name', 'file')}.json")  # You can give it any name you prefer
+    #                     # Prepare data for serializer
+    #                     serializer_data = {"resource": resource.id, "type": "api", "file": django_file}
+    #                     serializer = ResourceFileSerializer(data=serializer_data, partial=True)
+    #                     serializer.is_valid(raise_exception=True)
+    #                     serializer.save()
+    #                     serializer_data = serializer.data
+
+    #                     LOGGER.info(f"Embeding creation started for youtube url: {resource_file.get('file')}")
+    #                     serializer_data["state"] = state
+    #                     serializer_data["category"] =category
+    #                     serializer_data["sub_category"] = sub_category
+    #                     serializer_data["country"] = country
+    #                     serializer_data["district"] = district
+    #                     serializer_data["countries"] = countries
+    #                     serializer_data["states"] = states
+    #                     serializer_data["districts"] = districts
+    #                     serializer_data["sub_categories"] = sub_categories
+    #                     create_vector_db.delay(serializer_data)
+    #                     load_categories.delay(serializer_data)
+    #             else:
+    #                 serializer = ResourceFileSerializer(data={"resource": resource.id, **resource_file}, partial=True)
+    #                 serializer.is_valid(raise_exception=True)
+    #                 serializer.save()
+    #                 serializer_data = serializer.data
+    #                 LOGGER.info(f"Embeding creation started for url: {resource_file.get('url')} or file: {resource_file.get('url')}")
+    #                 serializer_data["state"] = state
+    #                 serializer_data["category"] =category
+    #                 serializer_data["sub_category"] = sub_category
+    #                 serializer_data["country"] = country
+    #                 serializer_data["district"] = district
+    #                 serializer_data["countries"] = district
+    #                 serializer_data["countries"] = countries
+    #                 serializer_data["states"] = states
+    #                 serializer_data["districts"] = districts
+    #                 serializer_data["sub_categories"] = sub_categories
+    #                 create_vector_db.delay(serializer_data)
+    #                 load_categories.delay(serializer_data)
+    #         for file in resource_files[0]:
+    #             data = {"resource":resource.id, "file":file, "type": "file"}
+    #             serializer = ResourceFileSerializer(data = data)
+    #             serializer.is_valid(raise_exception=True)
+    #             serializer.save()
+    #             serializer_data = serializer.data
+    #             serializer_data["state"] = state
+    #             serializer_data["category"] =category
+    #             serializer_data["sub_category"] = sub_category
+    #             serializer_data["country"] = country
+    #             serializer_data["district"] = district
+    #             serializer_data["countries"] = countries
+    #             serializer_data["states"] = states
+    #             serializer_data["districts"] = districts
+    #             serializer_data["sub_categories"] = sub_categories
+    #             create_vector_db.delay(serializer_data)
+    #             load_categories.delay(serializer_data)
+
+    #         return resource
+    #     except Exception as e:
+    #         LOGGER.error(e,exc_info=True)
+    #         return e
+        
+# This serializer of auto categorization.
+
+class ResourceAutoCatSerializer(serializers.ModelSerializer):
+
+    class OrganizationRetriveSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Organization
+            fields = ["id", "org_email", "name", "logo", "address"]
+
+    class UserSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = User
+            fields = ["id", "first_name", "last_name", "email", "role", "on_boarded_by"]
+    
+
+    categories = serializers.SerializerMethodField(read_only=True)
+    resources = ResourceFileSerializer(many=True, read_only=True)
+    uploaded_files = serializers.ListField(child=serializers.JSONField(), write_only=True, required=False)
+    files = serializers.ListField(child=serializers.ListField(), write_only=True, required=False)
+    sub_categories_map = serializers.ListField(write_only=True)
+    organization = OrganizationRetriveSerializer(
+        allow_null=True, required=False, read_only=True, source="user_map.organization"
+    )
+    user = UserSerializer(allow_null=True, required=False, read_only=True, source="user_map.user")
+    content_files_count = serializers.SerializerMethodField(method_name="get_content_files_count")
+
+    class Meta:
+        model = Resource
+        fields = (
+            "id",
+            "title",
+            "description",
+            "user_map",
+            "category",
+            "resources",
+            "uploaded_files",
+            "organization",
+            "user",
+            "created_at",
+            "updated_at",
+            "content_files_count",
+            "sub_categories_map",
+            "categories",
+            "files",
+            "country"
+        )
+    
+    def get_categories(self, instance):
+        category_and_sub_category = Category.objects.prefetch_related(
+              Prefetch("subcategory_category",
+                        queryset=SubCategory.objects.prefetch_related(
+                            "resource_sub_category_map").filter(
+                                resource_sub_category_map__resource=instance.id),
+                        ), 
+        'subcategory_category__resource_sub_category_map'
+        ).filter(subcategory_category__resource_sub_category_map__resource=instance.id).distinct().all()
+        serializer = CategorySerializer(category_and_sub_category, many=True)
+        return serializer.data
+    
+    def get_content_files_count(self, resource):
+        return ResourceFile.objects.filter(resource=resource.id).values('type').annotate(count=Count('type'))
+    
+    def construct_file_path(self, filename):
         # Generate a unique string to append to the filename
         unique_str = get_random_string(length=8)
         # Construct the file path
@@ -1203,85 +1478,24 @@ class ResourceSerializer(serializers.ModelSerializer):
             resource_files_data = validated_data.pop("uploaded_files")
             resource_files = validated_data.pop("files")
             sub_categories_map=validated_data.pop("sub_categories_map")
+            validated_data["district"] = {}
+            validated_data["village"] = {}
+            validated_data["state"] = {}
             resource = Resource.objects.create(**validated_data)
-            resource_files_data = json.loads(resource_files_data[0]) if resource_files_data else []
-            sub_categories_map = json.loads(sub_categories_map[0]) if sub_categories_map else []
-            import pdb; pdb.set_trace()
             resource_sub_cat_instances= [
                 ResourceSubCategoryMap(resource=resource, sub_category=SubCategory.objects.get(id=sub_cat)
-                                       ) for sub_cat in sub_categories_map]
+                                       ) for sub_cat in sub_categories_map[0].values()]
 
             ResourceSubCategoryMap.objects.bulk_create(resource_sub_cat_instances)
-
-            for resource_file in resource_files_data:
-                if resource_file.get("type") == "youtube":
-                    youtube_urls_response = get_youtube_url(resource_file.get("url"))
-                    if youtube_urls_response.status_code == 400:
-                        return youtube_urls_response
-                    youtube_urls = youtube_urls_response.data
-                    playlist_urls = [{"resource": resource.id, "type":"youtube", **row} for row in youtube_urls]
-                    for row in playlist_urls:
-                        serializer = ResourceFileSerializer(data=row, partial=True)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save()
-                        LOGGER.info(f"Embeding creation started for youtube url: {row.get('url')}")
-                        VectorDBBuilder.create_vector_db.delay(serializer.data)
-                if resource_file.get("type") == "api":
-                    with open(resource_file.get("file").replace("/media/", ''), "rb") as outfile:  # Open the file in binary read mode
-                        # Wrap the file content using Django's ContentFile
-                        django_file = ContentFile(outfile.read(), name=f"{resource_file.get('file_name', 'file')}.json")  # You can give it any name you prefer
-                        # Prepare data for serializer
-                        serializer_data = {"resource": resource.id, "type": "api", "file": django_file}
-                        serializer = ResourceFileSerializer(data=serializer_data, partial=True)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save()
-                        LOGGER.info(f"Embeding creation started for youtube url: {resource_file.get('file')}")
-                        VectorDBBuilder.create_vector_db.delay(serializer.data)
-                else:
-                    serializer = ResourceFileSerializer(data={"resource": resource.id, **resource_file}, partial=True)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    LOGGER.info(f"Embeding creation started for url: {resource_file.get('url')} or file: {resource_file.get('url')}")
-                    VectorDBBuilder.create_vector_db.delay(serializer.data)
-            for file in resource_files[0]:
-                data = {"resource":resource.id, "file":file, "type": "file"}
+            for files in resource_files[0]:
+                data = {"resource":resource.id, "file": files, "type": "file"}
                 serializer = ResourceFileSerializer(data = data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                VectorDBBuilder.create_vector_db.delay(serializer.data)
             return resource
         except Exception as e:
             LOGGER.error(e,exc_info=True)
             return e
-    # def update(self, instance, validated_data):
-    #     uploaded_files_data = validated_data.pop('uploaded_files', [])
-
-    #     for attr, value in validated_data.items():
-    #         setattr(instance, attr, value)
-    #     instance.save()
-
-    #     # Handle existing files
-    #     # import pdb; pdb.set_trace()
-    #     existing_file_ids = []
-    #     for file_data in uploaded_files_data:
-    #         file_id = file_data.get('id', None)
-    #         if file_id and file_data.get('delete', None):  # Existing file
-    #             existing_file = ResourceFile.objects.get(id=file_id)
-    #             existing_file_ids.append(existing_file.id)
-    #             # Update file attributes if needed
-    #         else:  # New file
-    #             ResourceFile.objects.create(resource=instance, file=file_data['file'])
-
-    #     # Handle deletion of files not present in uploaded_files_data
-    #     unwanted_files = ResourceFile.objects.filter(resource=instance).exclude(id__in=existing_file_ids)
-    #     unwanted_files.delete()
-    #     return instance
-
-
-# class ResourceFileSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ResourceFile
-#         fields = "__all__"
 
 
 
@@ -1341,7 +1555,6 @@ class ResourceUsagePolicySerializer(serializers.ModelSerializer):
         model = ResourceUsagePolicy
         fields = "__all__"
 
-
 class ResourceAPIBuilderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceUsagePolicy
@@ -1351,11 +1564,6 @@ def get_random_string(length=8):
     characters = string.ascii_letters + string.digits
     unique_str = ''.join(secrets.choice(characters) for _ in range(length))
     return quote(unique_str, safe='')
-
-# class ConversationSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Conversation
-#         fields = "__all__"
 
 class MessagesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -1402,3 +1610,18 @@ class ResourceListSerializer(serializers.ModelSerializer):
         return ResourceFile.objects.filter(resource=resource.id).values('type').annotate(count=Count('type'))
 
    
+class CategorySubcategoryInputSerializer(serializers.Serializer):
+    category_name = serializers.CharField(max_length=255)
+    subcategory_name = serializers.CharField(max_length=255)
+
+
+class SourceDetailsSerializer(serializers.Serializer):
+    source_type = serializers.CharField(max_length=50)
+    details = serializers.DictField()
+
+class FileItemSerializer(serializers.Serializer):
+    file_name = serializers.CharField(max_length=255)
+    file_url = serializers.CharField(max_length=255)
+
+class FileResponseSerializer(serializers.Serializer):
+    files = FileItemSerializer(many=True)

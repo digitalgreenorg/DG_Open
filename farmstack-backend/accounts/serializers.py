@@ -1,8 +1,9 @@
+import phonenumbers
 from django.db import models
 from django.db.models import fields
 from rest_framework import serializers
 from rest_framework.parsers import MultiPartParser
-import phonenumbers
+
 from accounts.models import User, UserRole
 from utils.validators import validate_phone_number
 
@@ -52,7 +53,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "profile_picture",
             "on_boarded",
             "approval_status",
-            "on_boarded_by"
+            "on_boarded_by",
+            "password"
         )
         # fields = "__all__"
         # depth = 1
@@ -119,8 +121,17 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     role = serializers.CharField()
+    password = serializers.CharField(required=False, allow_blank=True)
+
 
 
 class OtpSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.IntegerField()
+
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
