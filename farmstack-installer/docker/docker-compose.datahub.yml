@@ -17,7 +17,7 @@ services:
       - postgresql-network
 
   datahub:
-    image: farmstack/fs_kenya_stage-ui:latest
+    image: farmstack/aiep-farmstack-ui:latest
     container_name: datahub-ui
     restart: on-failure
     env_file:
@@ -34,7 +34,7 @@ services:
       - postgresql-network
 
   datahub-be:
-    image: farmstack/fs_kenya_stage-be:latest
+    image: farmstack/aiep-farmstack-be:latest
     restart: on-failure
     container_name: datahub-be
     env_file:
