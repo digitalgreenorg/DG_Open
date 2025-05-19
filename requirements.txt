@@ -171,12 +171,11 @@ pluggy==1.0.0
 proglog==0.1.10
 prometheus_client==0.20.0
 prompt-toolkit==3.0.43
-protobuf==4.25.3
+protobuf
 psycopg==3.1.14
 psutil==6.0.0
 psycopg-binary==3.1.18
 psycopg2-binary
-protobuf==3.20.1
 # psycopg
 ptyprocess==0.7.0
 py==1.11.0
@@ -284,3 +283,5 @@ yt-dlp
 azure-storage-blob
 azure-core
 dropbox
+django_celery_beat
+jq

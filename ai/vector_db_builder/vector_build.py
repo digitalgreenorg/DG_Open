@@ -110,9 +110,16 @@ def load_documents(url, file, doc_type, resource_file, transcription=""):
     try:
         
         if doc_type == 'api':
-            absolute_path = os.path.join(settings.MEDIA_ROOT, file.replace("/media/", ''))
-            loader = JSONLoader(file_path=absolute_path,  jq_schema='.', text_content=False)
-            return loader.load(), "completed"
+            with temporary_file(suffix=".json") as temp_pdf_path:
+                response = requests.get(file)
+                if response.status_code != 200:
+                    return response.txt, "failed"
+                with open(temp_pdf_path, 'wb') as f:
+                    f.write(response.content)
+                LOGGING.info("absolute_path of the api file {file}")
+                loader = JSONLoader(file_path=temp_pdf_path,  jq_schema='.', text_content=False)
+                return loader.load(), "completed"
+        
         elif doc_type in ['youtube', 'pdf', 'website', 'file', 'dropbox', 's3', 'google_drive', 'dropbox']:
             with temporary_file(suffix=".pdf") as temp_pdf_path:
                 if doc_type == 'youtube':
@@ -131,6 +138,7 @@ def load_documents(url, file, doc_type, resource_file, transcription=""):
                     doc_text = ""
                     web_site_loader = WebsiteLoader()
                     main_content, web_links = web_site_loader.process_website_content(url)
+                    # doc_text = web_site_loader.aggregate_links_content(web_links, doc_text)
                     doc_text = web_site_loader.aggregate_links_content(web_links, doc_text)
                     all_content = main_content + "\n" + doc_text
                     build_pdf(all_content.replace("\n", " "), temp_pdf_path)
@@ -151,7 +159,7 @@ def load_documents(url, file, doc_type, resource_file, transcription=""):
             LOGGING.error(f"Unsupported input type: {doc_type}")
             return f"Unsupported input type: {doc_type}", "failed"
     except Exception as e:
-        LOGGING.error(f"Faild lo load the documents: {str(e)}")
+        LOGGING.error(f"Faild lo load the documents: {str(e)}", exc_info=True)
         return str(e), "failed"
 
 def split_documents(documents, chunk_size, chunk_overlap):

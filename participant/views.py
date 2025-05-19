@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import time
+import csv
 from bdb import set_trace
 from contextlib import closing
 from functools import reduce
@@ -2016,7 +2017,7 @@ class DataBaseViewSet(GenericViewSet):
             dataset_name = request.data.get("dataset_name")
             source = request.data.get("source")
             file_name = request.data.get("file_name")
-
+            headers = {}
             if auth_type == 'NO_AUTH':
                 response = requests.get(url)
             elif auth_type == 'API_KEY':
@@ -2035,25 +2036,49 @@ class DataBaseViewSet(GenericViewSet):
                 except ValueError:
                     data = response.text
 
+                # Create the directory to store the file
                 file_path = file_ops.create_directory(
                     settings.DATASET_FILES_URL, [dataset_name, source])
-                with open(file_path + "/" + file_name + ".json", "w") as outfile:
-                    if type(data) == list:
-                        json.dump(data, outfile)
-                    else:
-                        outfile.write(json.dumps(data))
 
-                # result = os.listdir(file_path)
+                # Determine file extension based on data type (list or not)
+                if isinstance(data, list):
+                    file_extension = ".csv"
+                else:
+                    file_extension = ".json"
+
+                # Set file name
+                file_name_with_extension = file_name + file_extension
+
+                # Save data as CSV if it is a list, otherwise save it as JSON
+                if isinstance(data, list):
+                    # Save as CSV
+                    with open(file_path + "/" + file_name_with_extension, "w", newline='', encoding='utf-8') as outfile:
+                        writer = csv.DictWriter(outfile, fieldnames=data[0].keys())
+                        writer.writeheader()
+                        writer.writerows(data)
+                else:
+                    # Save as JSON
+                    with open(file_path + "/" + file_name_with_extension, "w", encoding='utf-8') as outfile:
+                        json.dump(data, outfile)
+
+                # Create DatasetV2File instance
+                current_time = datetime.datetime.utcnow()
+                current_time_str = current_time.strftime('%Y-%m-%d %H:%M:%S')
                 instance = DatasetV2File.objects.create(
                     dataset=dataset,
                     source=source,
-                    file=os.path.join(dataset_name, source,
-                                      file_name + ".json"),
+                    file=os.path.join(dataset_name, source, file_name_with_extension),
                     file_size=os.path.getsize(
-                        os.path.join(settings.DATASET_FILES_URL, dataset_name, source, file_name + ".json")),
-                    standardised_file=os.path.join(
-                        dataset_name, source, file_name + ".json"),
+                        os.path.join(settings.DATASET_FILES_URL, dataset_name, source, file_name_with_extension)),
+                    standardised_file=os.path.join(dataset_name, source, file_name_with_extension),
+                    connection_details={"auth_type": auth_type, "url": url, "headers": headers,
+                                        "frequency": request.data.get("frequency", ""), 
+                                        "file_replace": request.data.get("file_replace", False),
+                                        "last_pull": current_time_str,
+                                        "file_name": file_name}
                 )
+
+                # Serialize and return the response
                 serializer = DatasetFileV2NewSerializer(instance)
                 return JsonResponse(serializer.data, status=status.HTTP_200_OK)
 

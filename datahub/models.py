@@ -109,8 +109,8 @@ APPROVAL_STATUS = (
 USAGE_POLICY_REQUEST_STATUS = (
     ("approved", "approved"),
     ("rejected", "rejected"),
-    ("requested", "requested")
-
+    ("requested", "requested"),
+    ("recalled", "recalled"),
 )
 USAGE_POLICY_API_TYPE = (
     ("dataset_file", "dataset_file"),

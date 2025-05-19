@@ -20,13 +20,26 @@ class WebsiteLoader:
             return "", ""
 
     def aggregate_links_content(self, links, doc_text):
-        def fetch_content(link):
-            main_content, web_links = self.process_website_content(link)
-            return main_content, link
+        # def fetch_content(link):
+        #     main_content, web_links = self.process_website_content(link)
+        #     return main_content, link
+        for link in set(links):
+            main_content, link  = self.process_website_content(link)
+            doc_text +=  f" Below content related to link: {link} \n"+ main_content
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(fetch_content, link) for link in set(links)]
-            for future in as_completed(futures):
-                main_content, link = future.result()
-                doc_text +=  f" Below content related to link: {link} \n"+ main_content
         return doc_text
+
+
+    # import asyncio
+
+    # async def fetch_content(self, link):
+    #     main_content, web_links = await self.process_website_content(link)
+    #     return main_content, link
+
+    # async def aggregate_links_content_async(self, links, doc_text):
+    #     tasks = [self.fetch_content(link) for link in set(links)]
+    #     results = await asyncio.gather(*tasks)
+
+    #     for main_content, link in results:
+    #         doc_text += f" Below content related to link: {link} \n" + main_content
+    #     return doc_text
