@@ -1,0 +1,35 @@
+/* @import url("https://fonts.googleapis.com/css2?family=Arial:wght@300;400;600;700&display=swap"); */
+
+.add_light_text {
+  font-family: "Montserrat";
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 22px;
+  color: #212b36;
+}
+
+.tab_header {
+  font-family: "Montserrat";
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 22px;
+  color: #afbac4;
+  text-transform: none;
+}
+
+.tab_header_selected {
+  font-family: "Montserrat";
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 22px;
+  color: #00a94f;
+  text-transform: none;
+}
+
+.ml-16 {
+  margin-left: 16px;
+}
+
+.mt-50 {
+  margin-top: 50px;
+}

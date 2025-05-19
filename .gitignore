@@ -28,3 +28,5 @@ Jenkinsfile
 
 package-lock.json
 .env.production
+
+/envs

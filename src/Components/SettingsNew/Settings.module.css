@@ -1,0 +1,48 @@
+.inputs {
+    align-items: center;
+    gap: 8px;
+    isolation: isolate;
+  
+    max-width: 564px !important;
+    height: 56px !important;  
+    flex: none;
+    order: 0;
+    align-self: stretch;
+    flex-grow: 0;
+    z-index: 0;
+    margin: 55px auto 60px auto;
+  }
+  .main_box {
+    margin: 0px 242px;
+  }
+  .main_label {
+    font-family: "Montserrat";
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 39px;
+    letter-spacing: 0px;
+    margin: 0px auto 10px 0px;
+    text-align: left !important;
+  }
+  .instructions{
+    font-family: "Montserrat" !important;
+    font-weight: 500 !important;
+    font-size: 24px;
+    line-height: 25px;
+    letter-spacing: 0px;
+    margin: 0px auto 10px 0px;
+  }
+  .text{
+    text-align: justify;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .reset_button{
+    display: flex !important;
+    justify-content: space-evenly !important;
+  }
+  .next_button {
+    padding: 10px 20px;
+    width: 134px !important;
+  }

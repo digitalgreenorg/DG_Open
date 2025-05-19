@@ -1,32 +1,16 @@
-import ReactDOM from "react-dom/client";
+import React from "react";
+import ReactDOM from "react-dom";
+import "./Assets/CSS/common.css";
 import App from "./App";
-import { VistaarFarmStackProvider } from "common/components/context/VistaarContext/FarmStackProvider";
-import { EadpFarmStackProvider } from "common/components/context/EadpContext/FarmStackProvider";
-import { KadpFarmStackProvider } from "common/components/context/KadpContext/FarmStackProvider";
+import FarmStackProvider from "./Components/Contexts/FarmStackContext";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-const instance = process.env.REACT_APP_INSTANCE;
-
-// Dynamically select which context provider to use based on the instance
-let ProviderComponent;
-
-switch (instance.toUpperCase()) {
-  case "VISTAAR":
-    ProviderComponent = VistaarFarmStackProvider;
-    break;
-  case "EADP":
-    ProviderComponent = EadpFarmStackProvider;
-    break;
-  case "KADP":
-    ProviderComponent = KadpFarmStackProvider;
-    break;
-  default:
-    // A default provider or null if there's no suitable match
-    ProviderComponent = ({ children }) => <>{children}</>; // Simple pass-through component
-}
-
-root.render(
-  <ProviderComponent>
+ReactDOM.render(
+  <FarmStackProvider>
     <App />
-  </ProviderComponent>
+  </FarmStackProvider>,
+  document.getElementById("root")
 );
+
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: https://bit.ly/CRA-PWA

@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+.mainBox {
+  border-radius: 10px;
+  border: 1px solid #919eab;
+  padding: 0px;
+  margin: 0px 0px;
+  overflow: hidden;
+  /* font-family: "Inter", sans-serif; */
+  font-family: "Montserrat", sans-serif;
+  font-style: normal;
+}
+
+.mainBox:hover {
+  box-shadow: 0 3px 10px #ab840574;
+}
+
+.topRowOfCard {
+  height: 90px;
+  background: #f9eabc;
+  padding: 20px;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: left;
+  border-bottom: 1px solid #9aa1a9;
+
+  background: #636363 !important;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #ab84057f, white) !important;
+  background: -webkit-linear-gradient(to bottom, #ab84057f, white) !important;
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #ab84057f, white) !important;
+  background: linear-gradient(to bottom, #ab84057f, white);
+}
+
+.topRowOfCard div:nth-child(2) {
+  font-weight: 700;
+}
+
+.topRowOfCard > div:nth-child(2) {
+  font-weight: 400;
+}
+
+.selectAllRow {
+  text-align: left;
+  padding: 10px 20px 0px 20px;
+  border-bottom: 1px solid #9aa1a9;
+}
+
+.columnsRow {
+  text-align: left;
+  padding: 20px;
+}
+
+.selectColumns {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  gap: 10px;
+}
+
+.eachCol {
+  width: 250px;
+}
+
+.deleteicon:hover .topRowOfCard {
+  background: red !important;
+  color: white !important;
+}
+
+.deleteicon {
+  /* align-self: flex-end; */
+}
