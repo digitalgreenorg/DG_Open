@@ -1234,7 +1234,7 @@ class ResourceSerializer(serializers.ModelSerializer):
         # Trigger the tasks
         serializer_data = serializer.data  # Get the serialized data
         create_vector_db.delay(serializer_data)
-        # load_categories(serializer_data)
+        # create_vector_db(serializer_data)
 
 
     def create(self, validated_data):

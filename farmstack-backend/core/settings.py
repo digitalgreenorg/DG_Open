@@ -18,6 +18,7 @@ from pathlib import Path
 
 collections.Callable = collections.abc.Callable
 from corsheaders.defaults import default_headers
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "django_nose",
     "django_filters",
+    "django_celery_beat",
     # custom apps
     "accounts",
     "datahub",
@@ -440,6 +442,8 @@ YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY",'')
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL",'')
 FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024 # 25 Mb limit
 CELERY_BROKER_URL = f'redis://{os.environ.get("REDIS_SERVICE", "loaclhost")}:6379/0'
+CELERY_RESULT_BACKEND = f'redis://{os.environ.get("REDIS_SERVICE", "loaclhost")}:6379/0'
+
 # SMTP server configuration
 
 
@@ -447,3 +451,17 @@ SMTP_SERVER = os.environ.get("SMTP_SERVER",'')  # e.g., 'smtp.gmail.com' for Gma
 SMTP_PORT = 587  # or 465 for SSL
 SMTP_USER = os.environ.get("SMTP_USER",'')
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD",'')
+
+
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_BEAT_SCHEDULE = {
+    'fetch_dataset_for_all_files': {
+        'task': 'core.utils.fetch_data_for_all_datasets',
+        'schedule': crontab(minute=0, hour=0),  # Daily at midnight minite=0 hour=0
+        #  'schedule': crontab(minute='*/1')
+    },
+}

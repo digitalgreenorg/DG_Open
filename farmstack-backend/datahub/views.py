@@ -2469,18 +2469,18 @@ class DatasetV2View(GenericViewSet):
         try:
             instance = self.get_object()
             data = request.data.copy()
-            sub_categories_map = data.pop("sub_categories_map")
+            # sub_categories_map = data.pop("sub_categories_map")
             data["is_temp"] = False
             serializer = self.get_serializer(instance, data=data, partial=True)
             serializer.is_valid(raise_exception=True)
-            DatasetSubCategoryMap.objects.filter(dataset_id=instance).delete()
+            # DatasetSubCategoryMap.objects.filter(dataset_id=instance).delete()
             serializer.save()
             # sub_categories_map = json.loads(sub_categories_map[0]) if c else []
-            dataset_sub_cat_instances= [
-                DatasetSubCategoryMap(dataset=instance, sub_category=SubCategory.objects.get(id=sub_cat)
-                                       ) for sub_cat in sub_categories_map]
+            # dataset_sub_cat_instances= [
+            #     DatasetSubCategoryMap(dataset=instance, sub_category=SubCategory.objects.get(id=sub_cat)
+            #                            ) for sub_cat in sub_categories_map]
 
-            DatasetSubCategoryMap.objects.bulk_create(dataset_sub_cat_instances)
+            # DatasetSubCategoryMap.objects.bulk_create(dataset_sub_cat_instances)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:
@@ -2556,6 +2556,7 @@ class DatasetV2View(GenericViewSet):
                 )
                 .filter(user_organization_map=user_map_id, type="dataset_file")
                 .values(
+                    "id",
                     "approval_status",
                     "updated_at",
                     "accessibility_time",
@@ -3586,7 +3587,7 @@ class ResourceFileManagementViewSet(GenericViewSet):
                 serializer_data["states"] = states
                 serializer_data["districts"] = districts
                 create_vector_db.delay(serializer_data)
-                # create_vector_db.delay(serializer_data)
+                # create_vector_db(serializer_data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
@@ -3657,8 +3658,8 @@ class ResourceFileManagementViewSet(GenericViewSet):
                         serializer = ResourceFileSerializer(data=serializer_data)
                         serializer.is_valid(raise_exception=True)
                         serializer.save()
-                        # create_vector_db.delay(serializer.data)
                         create_vector_db.delay(serializer.data)
+                        # create_vector_db(serializer.data)
                         return JsonResponse(serializer.data, status=status.HTTP_200_OK)
                 return Response(file_path)
             LOGGER.error("Failed to fetch data from api")
@@ -4071,16 +4072,45 @@ class FetchFiles(viewsets.ModelViewSet):
 
     # Fetch files from Dropbox
     def fetch_files_from_dropbox(self, details):
+        # dbx = dropbox.Dropbox(details['access_token'])
+        # result = dbx.files_list_folder('')
+        # files = result.entries
+
+        # if not files:
+        #     return []
+
+        # return [{'file_name': file.name, 'file_url': f"https://www.dropbox.com/home/{file.path_display}"} for file in files]
+        # Initialize Dropbox client
         dbx = dropbox.Dropbox(details['access_token'])
+        
+        # List files in the root folder
         result = dbx.files_list_folder('')
         files = result.entries
 
+        # If no files are found, return an empty list
         if not files:
             return []
 
-        return [{'file_name': file.name, 'file_url': f"https://www.dropbox.com/home/{file.path_display}"} for file in files]
+        # List to store file details with public URLs
+        file_details = []
 
-    # Fetch files from Azure Blob Storage
+        # Loop through each file and generate a shared link
+        for file in files:
+            if isinstance(file, dropbox.files.FileMetadata):
+                try:
+                    # Create a shared link for the file
+                    shared_link_metadata = dbx.sharing_create_shared_link(file.path_display)
+                    file_url = shared_link_metadata.url.replace("dl=0", "dl=1")  # Adjust URL for direct download
+
+                    file_details.append({
+                        'file_name': file.name,
+                        'file_url': file_url
+                    })
+                except dropbox.exceptions.ApiError as e:
+                    print(f"Error generating shared link for {file.name}: {e}")
+        
+        return file_details
+        # Fetch files from Azure Blob Storage
     def fetch_files_from_azure_blob(self, details):
         blob_service_client = BlobServiceClient(account_url=details['account_url'], credential=details['account_key'])
         container_client = blob_service_client.get_container_client(details['container_name'])
@@ -4103,6 +4133,80 @@ class FetchFiles(viewsets.ModelViewSet):
 #         new_path = old_path.replace(old_base_url, new_base_url)
 #         resource.file.name = new_path
 #         resource.save()
+
+# @shared_task
+def pull_data_for_user(user_id):
+    # Get the user's data pull configuration
+    config = UserDataPullConfig.objects.get(user_id=user_id)
+
+    # Determine when the next pull is due
+    current_time = datetime.now()
+
+    # Check if the pull frequency is due (weekly or monthly)
+    if config.pull_frequency == 'weekly' and (current_time - config.last_pull >= timedelta(weeks=1)):
+        # Fetch data from the external API (e.g., some URL)
+        response = requests.get("YOUR_DATA_API_URL")
+        if response.status_code == 200:
+            data = response.json()
+            
+            for item in data:
+                # Create a new DatasetV2File entry for the fetched data
+                # Create a unique identifier for the file (you can customize how to name the file)
+                file_name = f"{uuid.uuid4().hex}_{item['file_name']}"  # Adjust according to API response
+
+                # If the file is returned as a URL or content, handle accordingly
+                file_content = requests.get(item['file_url']).content  # Assuming `file_url` is returned in the API response
+                
+                # Create the DatasetV2File record
+                dataset_file = DatasetV2File.objects.create(
+                    dataset=item['dataset'],  # Map to the DatasetV2 instance
+                    source="api",  # Indicating that the file source is from the API
+                    file=ContentFile(file_content, name=file_name),  # Save the file to Django storage
+                    file_size=len(file_content),  # Set the file size from content
+                    standardised_file=item.get('standardised_file', None),  # If standardised file exists
+                    standardised_configuration=item.get('standardised_configuration', {}),
+                    accessibility=item.get('accessibility', 'public'),
+                    connection_details=item.get('connection_details', {}),
+                )
+
+                # Map the DatasetV2File to UserDataPullConfig
+                config.resource_file = dataset_file
+                config.save()
+
+        # Update the last pull time
+        config.last_pull = current_time
+        config.save()
+
+    elif config.pull_frequency == 'monthly' and (current_time - config.last_pull >= timedelta(weeks=4)):
+        # Fetch monthly data (similar to weekly but can be different API or logic)
+        response = requests.get("YOUR_MONTHLY_DATA_API_URL")
+        if response.status_code == 200:
+            data = response.json()
+            
+            for item in data:
+                # Create a new DatasetV2File entry for the fetched data
+                file_name = f"{uuid.uuid4().hex}_{item['file_name']}"
+                file_content = requests.get(item['file_url']).content  # Download the file content
+
+                dataset_file = DatasetV2File.objects.create(
+                    dataset=item['dataset'],  # Link to the DatasetV2 model
+                    source="api",
+                    file=ContentFile(file_content, name=file_name),
+                    file_size=len(file_content),
+                    standardised_file=item.get('standardised_file', None),
+                    standardised_configuration=item.get('standardised_configuration', {}),
+                    accessibility=item.get('accessibility', 'public'),
+                    connection_details=item.get('connection_details', {}),
+                )
+
+                # Link to the UserDataPullConfig
+                config.resource_file = dataset_file
+                config.save()
+
+        # Update the last pull time
+        config.last_pull = current_time
+        config.save()
+        
 def telegram_dashboard(request):
     return render(request, 'streamlit.html', {'url': os.getenv("TELEGRAM_URL")})
 
