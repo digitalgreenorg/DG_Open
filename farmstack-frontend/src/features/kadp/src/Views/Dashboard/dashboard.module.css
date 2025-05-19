@@ -1,7 +1,0 @@
-.fourChartParent{
-    display: grid;
-    grid-template-columns: auto auto;
-    row-gap: 30px;
-    column-gap: 20px;
-    justify-content: center ;
-}

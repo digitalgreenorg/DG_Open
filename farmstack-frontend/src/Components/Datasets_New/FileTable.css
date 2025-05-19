@@ -1,0 +1,45 @@
+.file_table_column {
+  font-family: "Open Sans" !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  line-height: 22.19px !important;
+  color: #3d4a52 !important;
+}
+
+.file_table_row {
+  font-family: "Montserrat" !important;
+  font-weight: 400 !important;
+  font-size: 14px !important;
+  line-height: 19.42px !important;
+  color: #3d4a52 !important;
+}
+
+.file_table_column_bg {
+  background: #f8f8f8 !important;
+}
+
+.file_table_row_bg {
+  background: #ffffff !important;
+}
+
+.b-1 {
+  border: 1px solid #e4e4e4;
+}
+
+.b_right {
+  border-right: 1px solid rgba(238, 238, 238, 0.5);
+}
+
+.b_left {
+  border-left: 1px solid rgba(238, 238, 238, 0.5);
+}
+
+.p-10 {
+  padding-left: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.w-100vw {
+  width: 100vw;
+}

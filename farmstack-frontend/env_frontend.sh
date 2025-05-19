@@ -1,5 +1,5 @@
 # Set up endpoint for env retrieval
-echo "Window.ENV_VARS = {" > /usr/share/nginx/html/env_config.js
+echo "window.ENV_VARS = {" > /usr/share/nginx/html/env_config.js
 
 # Collect enviroment variables for react
 eval enviroment_variables="$(env | grep REACT_APP.*=)"

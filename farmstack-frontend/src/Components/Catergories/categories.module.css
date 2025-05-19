@@ -1,0 +1,73 @@
+.container {
+  display: flex;
+  height: 100vh;
+  background-color: #ffffff;
+}
+
+.sidebar {
+  width: 25%;
+  background-color: #ffffff;
+  color: #333;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.mainContent {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #ffffff;
+  overflow-y: auto;
+  border-radius: 8px;
+  margin: 0px 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.category {
+  margin-bottom: 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category:hover {
+  background-color: #e0e0e0;
+}
+
+.categoryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.subcategoryList {
+  margin-top: 20px;
+  background-color: #fafafa;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.addSubcategoryForm {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.addButton {
+  margin-left: 10px;
+  background-color: #00a94f;
+  color: #fff;
+}
+
+.addButton:hover {
+  background-color: #00773a;
+}
+
+.deleteButton {
+  color: #ff0000;
+}
