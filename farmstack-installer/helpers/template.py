@@ -99,6 +99,16 @@ class Template:
             'DATAHUB_UI_VERSION': '1.1.0',
             'DATAHUB_API_VERSION': '1.1.0',
             'DATAHUB_DB_VERSION' : 'latest'
+
+            # Backend Additional AI Variables.
+            'OPENAI_API_KEY': dict_['openai_api_key'],
+            'SMTP_SERVER': dict_['smtp_server'],
+            'SMTP_PORT': dict_['smtp_port'],
+            'SMTP_USER': dict_['smtp_user'],
+            'SMTP_PASSWORD': dict_['smtp_password'],
+            'QDRANT_HOST': dict_['qdrant_host'],
+            'YOUTUBE_API_KEY': dict_['youtube_api_key'],
+            'STORAGE': dict_['media_storage']
             }
         except Exception as err:
             print(err)

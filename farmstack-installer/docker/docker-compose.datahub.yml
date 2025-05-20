@@ -4,6 +4,33 @@ volumes:
   media:
 
 services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    restart: on-failure
+    networks:
+      - postgresql-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    container_name: qdrant
+    ports:
+      - 5438:6333
+      - 5439:6334
+    expose:
+      - 5438
+      - 5439
+      - 6335
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    networks:
+      - postgresql-network
+
+
   db:
     image: postgres
     restart: on-failure

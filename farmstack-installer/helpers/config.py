@@ -292,8 +292,17 @@ class Config:
             ' Configuring Backend'))
         self.__dict['datahub_name'] = 'www.digitalgreen.org'
         self.__dict['datahub_site'] = f"{self.__dict['protocol']}://{self.__dict['public_domain']}"
-        self.__dict['sendgrid_key'] = CLI.colored_input(message='Enter your sendgrid key: ')
-        self.__dict['sendgrid_registered_email'] = CLI.colored_input(message='Enter registered e-mail with sendgrid: ')
+        self.__dict['sendgrid_key'] = 'sendgrid_key'
+        self.__dict['sendgrid_registered_email'] = 'sengrid_email'
+        self.__dict['smtp_server'] = CLI.colored_input(message='Enter the SMTP Server: ')
+        self.__dict['smtp_port'] = CLI.colored_input(message='Enter SMTP Port: ')
+        self.__dict['smtp_user'] = CLI.colored_input(message='Enter SMTP User: ')
+        self.__dict['smtp_password'] = CLI.colored_input(message='Enter SMTP Server Password: ')
+        self.__dict['media_storage'] = 'LOCAL'
+        self.__dict['qdrant_host'] = CLI.colored_input(message='Enter Qdrant Host: ')
+        self.__dict['openai_api_key'] = CLI.colored_input(message='Enter OPENAI API Key: ')
+        self.__dict['youtube_api_key'] = CLI.colored_input(message='Enter YouTube API Key: ')
+
 
     def __questions_datahub_database(self):
         CLI.framed_print(message=('Step 3:'
@@ -305,7 +314,7 @@ class Config:
         # self.__dict['datahub_root_password'] = CLI.colored_input(message='Enter root password :')
 
     def __install_where(self):
-        self.__dict['protocol'] =  'https'
+        self.__dict['protocol'] = 'https'
 
     def __questions_admin_information(self):
         self.__dict['datahub_admin_email'] = CLI.colored_input(message='Enter DATAHUB ADMIN Email : ')
