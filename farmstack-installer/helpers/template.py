@@ -98,7 +98,7 @@ class Template:
             # YAML Files
             'DATAHUB_UI_VERSION': '1.1.0',
             'DATAHUB_API_VERSION': '1.1.0',
-            'DATAHUB_DB_VERSION' : 'latest'
+            'DATAHUB_DB_VERSION' : 'latest',
 
             # Backend Additional AI Variables.
             'OPENAI_API_KEY': dict_['openai_api_key'],
