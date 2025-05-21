@@ -144,19 +144,18 @@ class Command:
             'docker-compose.datahub.yml',
             'up',
             '-d',
-            'db'
         ]  
         subprocess.call(command, cwd=exec_dir)
 
         # time.sleep(10)
 
-        command = [
-            'docker-compose',
-            '-f',
-            'docker-compose.datahub.yml',
-            'up',
-            '-d',
-            'datahub-be',
-            'datahub'
-        ]  
-        subprocess.call(command, cwd=exec_dir)
+        # command = [
+        #     'docker-compose',
+        #     '-f',
+        #     'docker-compose.datahub.yml',
+        #     'up',
+        #     '-d',
+        #     'datahub-be',
+        #     'datahub'
+        # ]  
+        # subprocess.call(command, cwd=exec_dir)

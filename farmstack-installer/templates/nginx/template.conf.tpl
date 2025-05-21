@@ -14,6 +14,7 @@ server {
 server{
     listen      443 ssl;
     server_name ${PUBLIC_DOMAIN};
+    client_max_body_size 100M;
 
     ssl_certificate_key /etc/nginx/cert/private.key;
     ssl_certificate /etc/nginx/cert/public.crt;
