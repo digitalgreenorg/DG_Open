@@ -109,7 +109,8 @@ class Template:
             'QDRANT_HOST': dict_['qdrant_host'],
             'YOUTUBE_API_KEY': dict_['youtube_api_key'],
             'STORAGE': dict_['media_storage'],
-            'REDIS_HOST':'localhost'
+            'REDIS_HOST':'localhost',
+            'REACT_APP_LOGIN_WITH_PASSWORD': 'true'
             }
         except Exception as err:
             print(err)
