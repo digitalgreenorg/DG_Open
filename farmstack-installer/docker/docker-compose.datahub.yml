@@ -40,7 +40,7 @@ services:
       - '5432:5432'
     volumes:
       - "~/.postgres_db:/var/lib/postgresql/data"
-      - ".config/db_init.sql:/docker-entrypoint-initdb.d/init.sql
+      - "./config/db_init.sql:/docker-entrypoint-initdb.d/init.sql"
     networks:
       - postgresql-network
 
