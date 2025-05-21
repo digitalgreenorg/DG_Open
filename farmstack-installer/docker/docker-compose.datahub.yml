@@ -71,7 +71,7 @@ services:
       sh -c 
         "python manage.py makemigrations datahub accounts participant microsite &&
          python manage.py migrate && python manage.py loaddata db_scripts/userrole_fixture.yaml &&
-         python manage.py loaddata db_scripts/admin.yaml &&
+         python manage.py loaddata /datahub/db_scripts/admin.yaml &&
          python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
