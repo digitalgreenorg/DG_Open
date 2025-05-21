@@ -34,7 +34,7 @@ coverage==7.0.3
 coloredlogs==15.0.1
 contourpy==1.2.1
 crashtest==0.3.1
-cryptography==42.0.8
+cryptography
 cycler==0.12.1
 cssutils==2.6.0
 dataclasses-json==0.6.7
