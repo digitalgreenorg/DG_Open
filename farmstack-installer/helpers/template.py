@@ -106,11 +106,12 @@ class Template:
             'SMTP_PORT': dict_['smtp_port'],
             'SMTP_USER': dict_['smtp_user'],
             'SMTP_PASSWORD': dict_['smtp_password'],
-            'QDRANT_HOST': dict_['qdrant_host'],
+            'QDRANT_HOST': dict_['public_domain'],
             'YOUTUBE_API_KEY': dict_['youtube_api_key'],
             'STORAGE': dict_['media_storage'],
             'REDIS_HOST':'localhost',
-            'REACT_APP_LOGIN_WITH_PASSWORD': 'true'
+            'REACT_APP_LOGIN_WITH_PASSWORD': 'true',
+            'REDIS_SERVICE':'redis'
             }
         except Exception as err:
             print(err)

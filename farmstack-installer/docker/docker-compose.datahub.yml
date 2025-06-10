@@ -67,12 +67,13 @@ services:
     container_name: datahub-be
     env_file:
       - ./.env
-    command: >
-      sh -c 
-        "python manage.py makemigrations datahub accounts participant microsite &&
-         python manage.py migrate && python manage.py loaddata db_scripts/userrole_fixture.yaml &&
-         python manage.py loaddata /datahub/db_scripts/admin.yaml &&
-         python manage.py runserver 0.0.0.0:8000"
+     command: >
+      sh -c "python manage.py makemigrations datahub accounts participant microsite && \ 
+      python manage.py migrate && \ 
+      python manage.py loaddata db_scripts/userrole_fixture.yaml && \ 
+      python manage.py runserver 0.0.0.0:8000 >> /datahub/farmstack_logs.txt 2>&1 & \ 
+      celery -A core worker --loglevel=info >> /datahub/celery_logs.txt 2>&1 & \
+      celery -A core beat --loglevel=info >> /datahub/celery_beat_logs.txt 2>&1"
     ports:
       - "8000:8000"
     depends_on:
@@ -82,6 +83,9 @@ services:
       - ~/.protected/:/datahub/protected
       - ./config/categories.json:/datahub/categories.json
       - ./config/admin.yaml:/datahub/db_scripts/admin.yaml
+       - ./config/celery_beat_logs.txt:/datahub/celery_beat_logs.txt
+      - ./config/celery_logs.txt:/datahub/celery_logs.txt
+      - ./config/farmstack_logs.txt:/datahub/farmstack_logs.txt
     links:
       - db:db
     networks:
