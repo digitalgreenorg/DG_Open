@@ -32,6 +32,20 @@ def create_record(model_class, data_to_be_inserted):
     return record
 
 
+def create_multiple_records(model_class, data_to_be_inserted):
+    """Create / insert multiple records in to the database."""
+    records = None
+    try:
+        with db_conn.atomic() as current_transaction:
+            records = model_class.insert_many(data_to_be_inserted).execute()
+
+    except Exception as error:
+        current_transaction.rollback()
+        logger.error(error, exc_info=True)
+
+    return records
+
+
 def update_record(model_class, record_id, data_to_be_updated, **kwargs):
     """Update a record."""
     record = None
