@@ -1,15 +1,30 @@
-import logging, json, certifi, re, uuid, base64, regex, binascii
+import base64
+import binascii
+import json
+import logging
+import re
+import uuid
+
+import certifi
+import regex
 from peewee import DoesNotExist
 from requests import Request, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
 from common.constants import Constants
-from database.db_operations import create_record, get_record_by_field, update_record
 from database.database_config import db_conn
-from database.models import Conversation, Messages, User, FollowUpQuestion, Language, MultilingualText
-from django_core.config import Config
+from database.db_operations import create_record, get_record_by_field, update_record
+from database.models import (
+    Conversation,
+    FollowUpQuestion,
+    Language,
+    Messages,
+    MultilingualText,
+    User,
+)
 from django_core import celery
+from django_core.config import Config
 from language_service.translation import *
 from language_service.utils import get_language_by_code
 
@@ -17,7 +32,13 @@ logger = logging.getLogger(__name__)
 
 
 def send_request(
-    url, headers={}, data=None, content_type="form-data", request_type="GET", total_retry=10, params=None
+    url,
+    headers={},
+    data=None,
+    content_type="form-data",
+    request_type="GET",
+    total_retry=10,
+    params=None,
 ):
     """
     Generic helper function to send requests to a specified URL with the relevant HTTP method,
@@ -29,7 +50,9 @@ def send_request(
             headers["Content-Type"] = "application/json"
             data = json.dumps(data)
 
-        request_obj = Request(request_type, url, data=data, headers=headers, params=params)
+        request_obj = Request(
+            request_type, url, data=data, headers=headers, params=params
+        )
         session = Session()
         request_prepped = session.prepare_request(request_obj)
         retries = Retry(
@@ -103,7 +126,8 @@ def get_user_chat_history(user_id, window=Config.CHAT_HISTORY_WINDOW):
         chat_history = ""
         for message in reversed(messages):
             chat_history = (
-                chat_history + f"\n\nUser : {message.translated_message}\nAI Assistant : {message.message_response}"
+                chat_history
+                + f"\n\nUser : {message.translated_message}\nAI Assistant : {message.message_response}"
             )
         # history.append((message.translated_message, message.message_response))
 
@@ -126,7 +150,9 @@ def insert_message_record(
     except Exception as error:
         logger.error(error, exc_info=True)
 
-    logger.info(f"Message inserted, message_id:{message_id} for conversation_id:{conversation_id}")
+    logger.info(
+        f"Message inserted, message_id:{message_id} for conversation_id:{conversation_id}"
+    )
     return message_inserted
 
 
@@ -210,7 +236,9 @@ async def postprocess_and_translate_query_response(
     follow_up_question_data_to_insert = []
 
     try:
-        output_language = input_language.split("-")[0] if "-" in input_language else input_language
+        output_language = (
+            input_language.split("-")[0] if "-" in input_language else input_language
+        )
         split_string_list = Constants.SPLIT_STRING_LIST_FOR_FOLLOW_UP_QUESTIONS
 
         index = -1
@@ -219,7 +247,9 @@ async def postprocess_and_translate_query_response(
                 index = original_response.find(substring)
                 if index != -1:
                     string_index = split_string_list.index(substring)
-                    (final_response, questions) = original_response.split(split_string_list[string_index])
+                    (final_response, questions) = original_response.split(
+                        split_string_list[string_index]
+                    )
                     final_response = final_response.strip()
                     questions = questions.strip()
                     break
@@ -250,7 +280,9 @@ async def postprocess_and_translate_query_response(
 
                 sequence += 1
                 follow_up_question_id = uuid.uuid4()
-                follow_up_question_text = re.sub("[1-3]\.\s*", "", str(translated_question).strip(), count=1)
+                follow_up_question_text = re.sub(
+                    "[1-3]\.\s*", "", str(translated_question).strip(), count=1
+                )
                 follow_up_question_options.append(
                     {
                         "follow_up_question_id": str(follow_up_question_id),
@@ -380,7 +412,9 @@ def set_user_preferred_language(user_id, language_id):
     """
     Save the user preferred language for the specified user
     """
-    saved_user_preferred_language = update_record(User, user_id, {"preferred_language_id": language_id})
+    saved_user_preferred_language = update_record(
+        User, user_id, {"preferred_language_id": language_id}
+    )
     return saved_user_preferred_language
 
 
@@ -406,7 +440,9 @@ def fetch_multilingual_texts_for_static_text_messages(
 
     try:
         text_code_list = [
-            format_multilingual_text_code(text_code_without_lang_code + "_" + language_code)
+            format_multilingual_text_code(
+                text_code_without_lang_code + "_" + language_code
+            )
             for text_code_without_lang_code in text_code_without_lang_code_list
         ]
 
@@ -414,14 +450,23 @@ def fetch_multilingual_texts_for_static_text_messages(
             with db_conn:
                 multilingual_text_query = MultilingualText.select(
                     MultilingualText.text_code, MultilingualText.text
-                ).where(MultilingualText.is_deleted == False, MultilingualText.text_code.in_(text_code_list))
+                ).where(
+                    MultilingualText.is_deleted == False,
+                    MultilingualText.text_code.in_(text_code_list),
+                )
 
                 if len(multilingual_text_query) >= 1:
-                    multilingual_text_query_list = list(multilingual_text_query.dicts().execute())
+                    multilingual_text_query_list = list(
+                        multilingual_text_query.dicts().execute()
+                    )
 
                 if len(multilingual_text_query_list) >= 1:
                     multilingual_text_list = [
-                        {text_code.get("text_code").strip(f"_{language_code}"): text_code.get("text")}
+                        {
+                            text_code.get("text_code").strip(
+                                f"_{language_code}"
+                            ): text_code.get("text")
+                        }
                         for text_code in multilingual_text_query_list
                     ]
 
@@ -438,7 +483,9 @@ def fetch_multilingual_texts_for_static_text_messages(
 
 
 def fetch_corresponding_multilingual_text(
-    corresponding_text, text_codes_list_with_multilingual_texts, language_code=Constants.LANGUAGE_SHORT_CODE_NATIVE
+    corresponding_text,
+    text_codes_list_with_multilingual_texts,
+    language_code=Constants.LANGUAGE_SHORT_CODE_NATIVE,
 ):
     """
     Return corresponding static text from a list of MultilingualTexts in specified language.

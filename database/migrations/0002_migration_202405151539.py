@@ -20,6 +20,7 @@ class Language(peewee.Model):
     code = CharField(max_length=10, null=True)
     latn_code = CharField(max_length=10, null=True, unique=True)
     bcp_code = CharField(max_length=10, null=True, unique=True)
+
     class Meta:
         table_name = "language"
 
@@ -36,7 +37,8 @@ class User(peewee.Model):
     first_name = CharField(max_length=255, null=True)
     last_name = CharField(max_length=255, null=True)
     last_used = DateTimeField(null=True)
-    preferred_language = snapshot.ForeignKeyField(backref='language', index=True, model='language', null=True)
+    preferred_language = snapshot.ForeignKeyField(backref="language", index=True, model="language", null=True)
+
     class Meta:
         table_name = "user"
 
@@ -48,8 +50,9 @@ class Conversation(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    user = snapshot.ForeignKeyField(backref='user', index=True, model='user')
+    user = snapshot.ForeignKeyField(backref="user", index=True, model="user")
     title = CharField(max_length=255, null=True)
+
     class Meta:
         table_name = "conversation"
 
@@ -65,6 +68,7 @@ class FollowUpQuestion(peewee.Model):
     message = CharField(max_length=10000, null=True)
     follow_up_question_type = CharField(max_length=50, null=True)
     sequence = IntegerField(null=True)
+
     class Meta:
         table_name = "follow_up_question"
 
@@ -76,7 +80,7 @@ class Messages(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    conversation = snapshot.ForeignKeyField(backref='conversation', index=True, model='conversation')
+    conversation = snapshot.ForeignKeyField(backref="conversation", index=True, model="conversation")
     original_message = CharField(max_length=10000, null=True)
     translated_message = CharField(max_length=10000, null=True)
     message_input_time = DateTimeField(null=True)
@@ -100,6 +104,7 @@ class Messages(peewee.Model):
     input_language_detected = CharField(max_length=20, null=True)
     retrieved_chunks = CharField(max_length=20000, null=True)
     condensed_question = CharField(max_length=20000, null=True)
+
     class Meta:
         table_name = "messages"
 
@@ -111,7 +116,7 @@ class GenerationMetrics(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    message = snapshot.ForeignKeyField(backref='generation_metrics', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="generation_metrics", index=True, model="messages")
     generation_start_time = DateTimeField(null=True)
     generation_end_time = DateTimeField(null=True)
     completion_tokens = CharField(max_length=10, null=True)
@@ -119,6 +124,7 @@ class GenerationMetrics(peewee.Model):
     total_tokens = CharField(max_length=10, null=True)
     response_gen_exception = CharField(max_length=20000, null=True)
     response_gen_retries = CharField(max_length=4, null=True)
+
     class Meta:
         table_name = "generation_metrics"
 
@@ -130,9 +136,10 @@ class MessageMediaFiles(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    message = snapshot.ForeignKeyField(backref='media_files', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="media_files", index=True, model="messages")
     media_type = CharField(max_length=20)
     media_url = CharField(max_length=255)
+
     class Meta:
         table_name = "media_files"
 
@@ -144,9 +151,10 @@ class MultilingualText(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    language = snapshot.ForeignKeyField(backref='language', index=True, model='language')
+    language = snapshot.ForeignKeyField(backref="language", index=True, model="language")
     text_code = CharField(max_length=512, unique=True)
     text = CharField(max_length=10000)
+
     class Meta:
         table_name = "multilingual_text"
 
@@ -158,7 +166,7 @@ class RephraseMetrics(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    message = snapshot.ForeignKeyField(backref='rephrase_metrics', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="rephrase_metrics", index=True, model="messages")
     rephrase_start_time = DateTimeField(null=True)
     rephrase_end_time = DateTimeField(null=True)
     completion_tokens = CharField(max_length=10, null=True)
@@ -167,6 +175,7 @@ class RephraseMetrics(peewee.Model):
     is_rerank_response_parsed = BooleanField(default=False)
     rephrase_exception = CharField(max_length=20000, null=True)
     rephrase_retries = CharField(max_length=4, null=True)
+
     class Meta:
         table_name = "rephrase_metrics"
 
@@ -179,10 +188,11 @@ class RerankedChunk(peewee.Model):
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
     chunk_id = CharField(max_length=50)
-    message = snapshot.ForeignKeyField(backref='reranked_chunks', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="reranked_chunks", index=True, model="messages")
     chunk_text = CharField(max_length=10000, null=True)
     source = CharField(max_length=200, null=True)
     rank = IntegerField(null=True)
+
     class Meta:
         table_name = "reranked_chunk"
 
@@ -194,7 +204,7 @@ class RerankMetrics(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    message = snapshot.ForeignKeyField(backref='rerank_metrics', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="rerank_metrics", index=True, model="messages")
     rerank_start_time = DateTimeField(null=True)
     rerank_end_time = DateTimeField(null=True)
     rerank_request_start_time = DateTimeField(null=True)
@@ -205,6 +215,7 @@ class RerankMetrics(peewee.Model):
     is_rerank_response_parsed = BooleanField(default=False)
     rerank_exception = CharField(max_length=20000, null=True)
     rerank_retries = CharField(max_length=4, null=True)
+
     class Meta:
         table_name = "rerank_metrics"
 
@@ -216,12 +227,13 @@ class Resource(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    message = snapshot.ForeignKeyField(backref='resources', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="resources", index=True, model="messages")
     response_text = CharField(max_length=255, null=True)
     translated_text = CharField(max_length=255, null=True)
     resource_string = CharField(max_length=255)
     resource_type = CharField(max_length=20)
     feedback = CharField(max_length=20, null=True)
+
     class Meta:
         table_name = "resource"
 
@@ -233,9 +245,10 @@ class RetrievalMetrics(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    message = snapshot.ForeignKeyField(backref='retrieval_metrics', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="retrieval_metrics", index=True, model="messages")
     retrieval_start_time = DateTimeField(null=True)
     retrieval_end_time = DateTimeField(null=True)
+
     class Meta:
         table_name = "retrieval_metrics"
 
@@ -248,13 +261,14 @@ class RetrievedChunk(peewee.Model):
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
     chunk_id = CharField(max_length=50)
-    message = snapshot.ForeignKeyField(backref='chunks', index=True, model='messages')
+    message = snapshot.ForeignKeyField(backref="chunks", index=True, model="messages")
     chunk_text = CharField(max_length=10000, null=True)
     source = CharField(max_length=200, null=True)
     repo_link = CharField(max_length=200, null=True)
     cosine_score = FloatField(null=True)
     page_no = IntegerField(null=True)
     rank = IntegerField(null=True)
+
     class Meta:
         table_name = "retrieved_chunk"
 
@@ -266,30 +280,31 @@ class UserActions(peewee.Model):
     updated_on = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
     is_deleted = BooleanField(default=False)
-    user = snapshot.ForeignKeyField(backref='user', index=True, model='user')
+    user = snapshot.ForeignKeyField(backref="user", index=True, model="user")
     action = CharField(max_length=10000, null=True)
     input_time = DateTimeField(null=True)
     response = CharField(max_length=10000, null=True)
     response_time = DateTimeField(null=True)
+
     class Meta:
         table_name = "user_actions"
 
 
 def forward(old_orm, new_orm):
-    user = new_orm['user']
+    user = new_orm["user"]
     return [
         # Apply default value '' to the field user.email,
-        user.update({user.email: ''}).where(user.email.is_null(True)),
+        user.update({user.email: ""}).where(user.email.is_null(True)),
     ]
 
 
 def migrate_forward(op, old_orm, new_orm):
     op.run_data_migration()
     op.add_not_null(new_orm.user.email)
-    op.add_index(new_orm.user, 'user_email')
+    op.add_index(new_orm.user, "user_email")
 
 
 def migrate_backward(op, old_orm, new_orm):
-    op.drop_index(old_orm.user, 'user_email')
+    op.drop_index(old_orm.user, "user_email")
     op.run_data_migration()
     op.drop_not_null(new_orm.user.email)

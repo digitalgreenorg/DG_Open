@@ -75,6 +75,7 @@ class ChatAPIViewSet(GenericViewSet):
             response_data.data["message"] = "Successful retrieval of response for above query"
             response_data.data["message_id"] = response_map.get("message_id")
             response_data.data["response"] = response_map.get("translated_response")
+            response_data.data["source"] = response_map.get("source", None)
             response_data.data["follow_up_questions"] = response_map.get("follow_up_questions")
 
         except Exception as error:

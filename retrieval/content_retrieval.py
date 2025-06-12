@@ -1,12 +1,18 @@
-import json, datetime, logging
-from django_core.config import Config
+import datetime
+import json
+import logging
+
 from common.utils import send_request
+from django_core.config import Config
 
 logger = logging.getLogger(__name__)
 
 
 def content_retrieval(
-    original_query, email, domain_url=Config.CONTENT_DOMAIN_URL, api_endpoint=Config.CONTENT_RETRIEVAL_ENDPOINT
+    original_query,
+    email,
+    domain_url=Config.CONTENT_DOMAIN_URL,
+    api_endpoint=Config.CONTENT_RETRIEVAL_ENDPOINT,
 ):
     """
     Retrieve content chunks relevant to the user query from content retrieval site.
@@ -34,7 +40,11 @@ def content_retrieval(
             total_retry=3,
         )
         # retrieved_content = response if len(response) >= 1 else None
-        retrieved_content = json.loads(response.text) if response and response.status_code == 200 else None
+        retrieved_content = (
+            json.loads(response.text)
+            if response and response.status_code == 200
+            else None
+        )
 
     except Exception as error:
         logger.error(error, exc_info=True)

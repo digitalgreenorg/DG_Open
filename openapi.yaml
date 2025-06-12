@@ -10,7 +10,7 @@ servers:
     description: Production server
 
 paths:
-  /chat/get_answer_for_text_query:
+  /chat/get_answer_for_text_query/:
     post:
       summary: Get answer for text query
       requestBody:
@@ -137,7 +137,7 @@ paths:
                       request.
                     example: true
 
-  /chat/synthesise_audio:
+  /chat/synthesise_audio/:
     post:
       summary: Synthesise audio from text
       requestBody:
@@ -241,7 +241,7 @@ paths:
                       request.
                     example: true
 
-  /chat/transcribe_audio:
+  /chat/transcribe_audio/:
     post:
       summary: Transcribe audio to text
       requestBody:
@@ -367,7 +367,7 @@ paths:
                       request.
                     example: true
 
-  /chat/get_answer_by_voice_query:
+  /chat/get_answer_by_voice_query/:
     post:
       summary: Get answer by processing voice query
       requestBody:
@@ -525,7 +525,7 @@ paths:
                       request.
                     example: true
 
-  /language/languages:
+  /language/languages/:
     get:
       summary: list supported languages
       parameters:
@@ -602,7 +602,7 @@ paths:
                       request.
                     example: false
 
-  /language/set_language:
+  /language/set_language/:
     post:
       summary: Save or set the client or user preferred language. This API will be useful when the Farmer.chat is used with database.
       requestBody:

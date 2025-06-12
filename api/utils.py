@@ -164,6 +164,7 @@ def process_query(original_query, email_id, authenticated_user={}):
             {
                 "translated_response": translated_response,
                 "final_response": final_response,
+                "source": response_map.get("source", None),
                 "follow_up_questions": follow_up_question_options,
             }
         )

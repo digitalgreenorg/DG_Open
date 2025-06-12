@@ -164,3 +164,6 @@ cython_debug/
 
 # MAC OS Desktop Services dir
 .DS_Store
+
+# Virtual environment directory
+.myenv
