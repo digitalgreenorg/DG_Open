@@ -1,6 +1,7 @@
 import logging
-from peewee import DoesNotExist
+
 from database.database_config import db_conn
+from peewee import DoesNotExist
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +11,9 @@ def get_record_by_field(model_class, field_name, value):
     record = None
     try:
         with db_conn:
-            query = model_class.select().where(getattr(model_class, field_name) == value)
+            query = model_class.select().where(
+                getattr(model_class, field_name) == value
+            )
             record = query.get()
     except DoesNotExist:
         return record
@@ -60,6 +63,8 @@ def update_record(model_class, record_id, data_to_be_updated, **kwargs):
             logger.error(f"Error updating record {e}", exc_info=True)
 
     except DoesNotExist:
-        logger.error(f"Record with {record_id} in the model {model_class} does not exist.")
+        logger.error(
+            f"Record with {record_id} in the model {model_class} does not exist."
+        )
 
     return record

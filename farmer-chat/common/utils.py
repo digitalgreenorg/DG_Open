@@ -7,11 +7,6 @@ import uuid
 
 import certifi
 import regex
-from peewee import DoesNotExist
-from requests import Request, Session
-from requests.adapters import HTTPAdapter
-from urllib3.util import Retry
-
 from common.constants import Constants
 from database.database_config import db_conn
 from database.db_operations import create_record, get_record_by_field, update_record
@@ -27,6 +22,10 @@ from django_core import celery
 from django_core.config import Config
 from language_service.translation import *
 from language_service.utils import get_language_by_code
+from peewee import DoesNotExist
+from requests import Request, Session
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 logger = logging.getLogger(__name__)
 
