@@ -36,10 +36,22 @@ def temporary_file(suffix=""):
 
 class LoadDocuments:
 
+    def _get_full_url(self, file):
+        """Construct full URL for media files using DATAHUB_SITE environment variable."""
+        if file.startswith('/media'):
+            base_url = os.environ.get("DATAHUB_SITE", "http://localhost:8000")
+            return base_url + file
+        return file
+
     def load_by_file_extension(self, file):
         if file.endswith(".pdf"):
             LOGGING.info(f"pdf file loader started for file: {file}")
-            return PyMuPDFLoader(file.replace('http://localhost:8000/', "")).load(), 'pdf'
+            # Handle media files with DATAHUB_SITE environment variable
+            if file.startswith('/media'):
+                full_url = self._get_full_url(file)
+                return PyMuPDFLoader(full_url).load(), 'pdf'
+            else:
+                return PyMuPDFLoader(file).load(), 'pdf'
         elif file.endswith(".csv"):
             with temporary_file(suffix=".csv") as temp_pdf_path:
                 response = requests.get(file)
