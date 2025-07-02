@@ -27,6 +27,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from accounts.models import User, UserRole
 from accounts.serializers import UserCreateSerializer
+from ai.retriever.manual_retrival import QuadrantRetrival
 from connectors.models import Connectors
 from core.constants import Constants
 from core.utils import (
@@ -1268,6 +1269,47 @@ class ResourceMicrositeViewSet(GenericViewSet):
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+      
+    @action(detail=False, methods=["post"])
+    def get_content(self, request):
+        embeddings = []
+        email = request.data.get("email")
+        query = request.data.get("query")
+        user_obj = User.objects.filter(email=email)
+        user = user_obj.first()
+        data = (
+                ResourceFile.objects.select_related(
+                    "resource",
+                    "resource__user_map",
+                    "resource__user_map__user"
+                )
+            )
+        if not user:
+            return Response([])
+        elif user.on_boarded_by:
+            data = (
+                data.filter(
+                    Q(resource__user_map__user__on_boarded_by=user.on_boarded_by)
+                    | Q(resource__user_map__user_id=user.on_boarded_by)
+                    )
+            )
+        elif user.role_id == 6:
+            data = (
+                data.filter(
+                    Q(resource__user_map__user__on_boarded_by=user.id)
+                    | Q(resource__user_map__user_id=user.id)
+                    )
+            )
+        else:
+            data = (
+                data.filter(resource__user_map__user__on_boarded_by=None).exclude(resource__user_map__user__role_id=6)
+            )
+        resource_file_ids = data.values_list("id", flat=True).all()
+
+        similar_chunks = QuadrantRetrival().retrieve_chunks(resource_file_ids, query, "", "","","","","", 10, 0.17)
+        return Response(similar_chunks)
+
+
 # Created a new class to return data from kde, agnext and krishitantra data stored in json format in utils folder
 class AdexAPIDatasetViewSet(GenericViewSet):
 
