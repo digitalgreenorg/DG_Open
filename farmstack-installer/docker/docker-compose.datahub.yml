@@ -83,7 +83,7 @@ services:
       - ~/.protected/:/datahub/protected
       - ./config/categories.json:/datahub/categories.json
       - ./config/admin.yaml:/datahub/db_scripts/admin.yaml
-       - ./config/celery_beat_logs.txt:/datahub/celery_beat_logs.txt
+      - ./config/celery_beat_logs.txt:/datahub/celery_beat_logs.txt
       - ./config/celery_logs.txt:/datahub/celery_logs.txt
       - ./config/farmstack_logs.txt:/datahub/farmstack_logs.txt
     links:
