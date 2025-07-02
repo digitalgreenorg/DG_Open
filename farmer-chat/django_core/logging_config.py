@@ -46,7 +46,12 @@ class ColoredFormatter(logging.Formatter):
         if log_level in COLORS:
             # record.asctime = COLORS[log_level] + record.levelname + COLORS["ENDC"]
             record.levelname = COLORS[log_level] + log_level + COLORS["ENDC"]
-            record.msg = COLORS[log_level] + record.msg + COLORS["ENDC"]
+            # record.msg = COLORS[log_level] + record.msg + COLORS["ENDC"]
+            record.msg = (
+                COLORS[log_level] + record.msg + COLORS["ENDC"]
+                if isinstance(record.msg, str)
+                else str(record.msg)
+            )
             record.name = COLORS["BRIGHT_MAGENTA"] + record.name + COLORS["ENDC"]
         return super().format(record)
 

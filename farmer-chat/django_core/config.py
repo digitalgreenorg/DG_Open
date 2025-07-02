@@ -1,5 +1,6 @@
 import os
-from dotenv import load_dotenv, dotenv_values
+
+from dotenv import dotenv_values, load_dotenv
 
 # load_dotenv()
 ENV_CONFIG = dotenv_values(encoding="utf-8")
@@ -7,9 +8,24 @@ if os.path.isfile(".config.env"):
     ENV_CONFIG.update(dotenv_values(".config.env", encoding="utf-8"))
 
 
+def handle_boolean(value=False) -> bool:
+    if (
+        isinstance(value, str)
+        and (
+            value.lower() == "true"
+            or value.lower() == "t"
+            or value.lower() == "yes"
+            or value.lower() == "y"
+        )
+    ) or (isinstance(value, bool) and value == True):
+        return True
+
+    return False
+
+
 class Config:
     # DB config
-    WITH_DB_CONFIG = ENV_CONFIG.get("WITH_DB_CONFIG", False)
+    WITH_DB_CONFIG = handle_boolean(ENV_CONFIG.get("WITH_DB_CONFIG", False))
     DB_NAME = ENV_CONFIG.get("DB_NAME")
     DB_USER = ENV_CONFIG.get("DB_USER")
     DB_PASSWORD = ENV_CONFIG.get("DB_PASSWORD")
@@ -20,9 +36,13 @@ class Config:
 
     # prompts
     REPHRASE_QUESTION_PROMPT = ENV_CONFIG.get("REPHRASE_QUESTION_PROMPT")
-    RERANKING_PROMPT_SINGLE_TEMPLATE = ENV_CONFIG.get("RERANKING_PROMPT_SINGLE_TEMPLATE")
+    RERANKING_PROMPT_SINGLE_TEMPLATE = ENV_CONFIG.get(
+        "RERANKING_PROMPT_SINGLE_TEMPLATE"
+    )
     RERANK_SINGLE_JSON_EXAMPLE = ENV_CONFIG.get("RERANK_SINGLE_JSON_EXAMPLE")
-    INTENT_CLASSIFICATION_PROMPT_TEMPLATE = ENV_CONFIG.get("INTENT_CLASSIFICATION_PROMPT_TEMPLATE")
+    INTENT_CLASSIFICATION_PROMPT_TEMPLATE = ENV_CONFIG.get(
+        "INTENT_CLASSIFICATION_PROMPT_TEMPLATE"
+    )
     CONVERSATION_PROMPT = ENV_CONFIG.get("CONVERSATION_PROMPT")
     UNCLEAR_QN_PROMPT = ENV_CONFIG.get("UNCLEAR_QN_PROMPT")
     EXIT_PROMPT = ENV_CONFIG.get("EXIT_PROMPT")

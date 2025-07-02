@@ -1,5 +1,9 @@
-import datetime, uuid, logging, json, random
 import asyncio
+import datetime
+import json
+import logging
+import random
+import uuid
 
 from django_core.config import Config
 from rag_service.openai_service import make_openai_request
@@ -24,7 +28,7 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
     """
     response_map = {}
     doc_map = None
-    reranked_chunk_map = None
+    reranked_chunk_map = {}
     rerank_start_time = None
     rerank_end_time = None
     rerank_request_start_time = None
@@ -66,27 +70,23 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
         return response_map
 
     for data in retrieval_results:
-        chunk_id = random.randint(1, 1000)
+        # chunk_id = random.randint(1, 1000)
+        chunk_id = data.get("id")
         doc_map.update(
             {
-                # data.id: {
-                #     "text": data.payload.get("text", ""),
-                #     "metadata": data.payload.get("metadata", {}),
-                #     "score": data.score,
-                # }
                 chunk_id: {
-                    "text": data.get("document", ""),
-                    "metadata": data.get("cmetadata", {}),
-                    "score": data.get("similarity"),
+                    # "document": data.get("document", ""),
+                    "document": data.get("text", ""),
+                    "cmetadata": data.get("cmetadata", {}),
+                    # "score": data.get("similarity", 0.0),
+                    "score": data.get("score", 0.0),
                 }
             }
         )
         docs_for_reranking.append(
             {
-                # "id": data.id,
-                # "text_chunk": data.payload.get("text", ""),
                 "id": chunk_id,
-                "text_chunk": data.get("document", ""),
+                "text_chunk": data.get("text", ""),
             }
         )
 
@@ -102,7 +102,10 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
 
     rerank_request_start_time = datetime.datetime.now()
     reranking_results = await asyncio.gather(
-        *(make_openai_request(prompt, model=Config.GPT_4_MODEL) for prompt in rerank_prompt_list)
+        *(
+            make_openai_request(prompt, model=Config.GPT_4_MODEL)
+            for prompt in rerank_prompt_list
+        )
     )
     rerank_request_end_time = datetime.datetime.now()
 
@@ -114,7 +117,9 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
             rerank_prompt_tokens += response.usage.prompt_tokens
             rerank_total_tokens += response.usage.total_tokens
             try:
-                response_obj = parse_single_rerank_json(response.choices[0].message.content)
+                response_obj = parse_single_rerank_json(
+                    response.choices[0].message.content
+                )
             except Exception as error:
                 logger.error(error, exc_info=True)
                 is_rerank_response_parsed = False
@@ -134,11 +139,11 @@ async def rerank_query(original_query, rephrased_query, email_id, retrieval_resu
     context_chunks = []
     for item in sorted_reranked_list:
         if len(context_chunks) < 6:
-            context_chunks.append(doc_map.get(int(item.get("id"))).get("text"))
+            context_chunks.append(doc_map.get(item.get("id")).get("document"))
             reranked_chunk_map.update(
                 {
                     item.get("id"): {
-                        "chunk": doc_map.get(int(item.get("id"))),
+                        "chunk": doc_map.get(item.get("id")),
                         "rank": item.get("relevance_score"),
                     }
                 }

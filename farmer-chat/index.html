@@ -329,6 +329,27 @@
         let responseText = removeFollowUpQuestions(data.response);
         let responseHtml = renderMarkdown(responseText);
         responseHtml = `<div class="prose min-w-full">${responseHtml}</div>`;
+        if (data.source) {
+          // Directly use the source URL
+          let sourceHtml = data.source; // URL of the source
+
+          // Check if the URL starts with "https://"
+          if (!sourceHtml.startsWith("https://")) {
+            if (sourceHtml.startsWith("/")) {
+              sourceHtml = "https://datahubtest.farmstack.co" + sourceHtml;
+            } else {
+              sourceHtml = "https://datahubtest.farmstack.co/" + sourceHtml;
+            }
+            // If it does not start with "https://", prepend the base URL
+          }
+          // Append a new div to responseHtml containing only the source link
+          responseHtml += `<div class="mt-4 flex justify-end">
+                        <a href="${sourceHtml}" target="_blank" class="inline-flex items-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
+                            <span>Source</span>
+                            <i class="ml-2">🔗</i>
+                        </a>
+                     </div>`;
+        }
 
         // Handle follow-up questions
         if (data.follow_up_questions && data.follow_up_questions.length > 0) {
@@ -453,6 +474,7 @@
                 response: data.message ?? "Something went wrong...",
                 follow_up_questions: [],
                 response_audio: null,
+                source: null,
               });
               // addToChatWindow("bot", "Failed to get response from API.");
             }
@@ -527,6 +549,7 @@
           sendMessage();
         }
       }
+      let currentAudio = null; // Holds the current playing audio element
 
       function fetchAndPlayAudio(message_id, responseText) {
         console.log("🚀 ~ fetchAndPlayAudio ~ message_id:", message_id);
@@ -534,6 +557,14 @@
           `button[data-message-id="${message_id}"]`
         );
         if (!playButton) return; // Early exit if button is not found
+
+        if (currentAudio && !currentAudio.paused) {
+          // If there is already playing audio, stop it
+          currentAudio.pause();
+          currentAudio.currentTime = 0; // Rewind the audio
+          playButton.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; // Show play icon
+          return;
+        }
 
         playButton.disabled = true; // Disable button to prevent multiple clicks
         playButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // Show loading spinner
@@ -562,9 +593,16 @@
           })
           .then((data) => {
             if (!data.error && data.audio) {
-              let audio = new Audio(`data:audio/ogg;base64,${data.audio}`);
-              audio.play();
-              playButton.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; // Reset button text
+              if (currentAudio) {
+                currentAudio.pause();
+              }
+              currentAudio = new Audio(`data:audio/ogg;base64,${data.audio}`);
+              currentAudio.play();
+              playButton.innerHTML = '<i class="fa-solid fa-stop"></i>'; // Show stop icon
+              currentAudio.addEventListener("ended", () => {
+                playButton.innerHTML =
+                  '<i class="fa-solid fa-volume-high"></i>'; // Reset to play icon when audio ends
+              });
             } else {
               playButton.innerHTML = "Failed to load audio";
               console.log("Failed to fetch audio from the API.");
@@ -574,7 +612,6 @@
           .catch((error) => {
             playButton.innerHTML = "Error";
             playButton.disabled = false;
-
             console.error("Error:", error);
           });
       }
