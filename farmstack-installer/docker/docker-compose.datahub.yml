@@ -67,7 +67,7 @@ services:
     container_name: datahub-be
     env_file:
       - ./.env
-     command: >
+    command: >
       sh -c "python manage.py makemigrations datahub accounts participant microsite && \ 
       python manage.py migrate && \ 
       python manage.py loaddata db_scripts/userrole_fixture.yaml && \ 
