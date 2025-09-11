@@ -63,4 +63,4 @@ Our team is committed to providing timely and helpful support to ensure the succ
 
 ## Thank You
 
-Thank you for choosing to work with FarmStack and Farmer-Chat to advance your farming solutions and community interactions! We look forward to seeing your contributions and are excited to collaborate on this journey of innovation.
+Thank you for choosing to work with FarmStack and Farmer-Chat to advance your farming solutions and community interactions!
