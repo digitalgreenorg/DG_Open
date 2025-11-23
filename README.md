@@ -18,6 +18,7 @@ The backbone of the FarmStack application, the Backend manages business logic, d
 
 - **Read the detailed [Backend README](./farmstack-backend/README.md)**
 
+
 ### FarmStack Installer
 
 The FarmStack Installer is crucial for easy deployment of the application. It automates the installation and configuration of both frontend and backend components, ensuring they operate cohesively.
